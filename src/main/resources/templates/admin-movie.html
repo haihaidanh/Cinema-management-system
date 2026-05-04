@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Admin - Quản lý Phim</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style> body { font-family: 'Inter', sans-serif; } .font-headline { font-family: 'Manrope', sans-serif; } </style>
+</head>
+<body class="bg-slate-50">
+
+<!-- Chèn Sidebar -->
+<div th:replace="~{fragments/admin_sidebar :: sidebar}"></div>
+
+<main class="ml-64 p-8">
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h1 class="text-3xl font-black font-headline text-[#111d23]">QUẢN LÝ PHIM</h1>
+            <p class="text-slate-500 mt-1">Danh sách các phim đang và sắp chiếu tại hệ thống</p>
+        </div>
+        <button class="bg-[#004692] hover:bg-[#00356d] text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
+            <span class="material-symbols-outlined">add_circle</span>
+            Thêm phim mới
+        </button>
+    </div>
+
+    <!-- Table Danh sách phim -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Poster</th>
+                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên Phim</th>
+                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Thể loại</th>
+                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Thời lượng</th>
+                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Hành động</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+            <tr>
+                <td class="px-6 py-4">
+                    <div class="w-12 h-16 bg-slate-200 rounded-md overflow-hidden">
+                        <img src="https://via.placeholder.com/150" class="w-full h-full object-cover">
+                    </div>
+                </td>
+                <td class="px-6 py-4 font-bold text-slate-800">Avengers: Endgame</td>
+                <td class="px-6 py-4 text-slate-500">Action, Sci-fi</td>
+                <td class="px-6 py-4 text-slate-500">180 phút</td>
+                <td class="px-6 py-4 space-x-2">
+                    <button class="text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-sm">edit</span>
+                    </button>
+                    <button class="text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                </td>
+            </tr>
+            <!-- Thêm vòng lặp th:each ở đây khi có data -->
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

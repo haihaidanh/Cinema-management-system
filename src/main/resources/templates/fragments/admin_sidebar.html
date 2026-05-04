@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside th:fragment="sidebar" class="fixed left-0 top-0 h-screen w-64 bg-[#111d23] text-white z-50">
+    <div class="p-6">
+        <a href="/admin/dashboard" class="flex items-center gap-2">
+            <div class="bg-[#004692] p-1.5 rounded-lg text-white">
+                <span class="material-symbols-outlined block">movie</span>
+            </div>
+            <span class="text-xl font-black font-headline tracking-tight text-white uppercase">CINEMA<span class="text-blue-400">SYS</span></span>
+        </a>
+    </div>
+
+    <nav class="mt-6 px-4 space-y-2">
+        <!-- Quản lý Phim -->
+        <a th:href="@{/admin/movies}"
+           class="flex items-center gap-3 p-3 rounded-xl transition-all font-medium">
+            <span class="material-symbols-outlined">movie_edit</span>
+            <span>Quản lý Phim</span>
+        </a>
+
+        <!-- Quản lý Suất chiếu -->
+        <a th:href="@{/admin/showtimes}"
+           class="flex items-center gap-3 p-3 rounded-xl transition-all font-medium">
+            <span class="material-symbols-outlined">schedule</span>
+            <span>Quản lý Suất chiếu</span>
+        </a>
+
+        <!-- Quản lý Phòng chiếu -->
+        <a th:href="@{/admin/rooms}"
+           class="flex items-center gap-3 p-3 rounded-xl transition-all font-medium">
+            <span class="material-symbols-outlined">meeting_room</span>
+            <span>Quản lý Phòng chiếu</span>
+        </a>
+    </nav>
+    <div class="px-4 mb-6">
+        <a th:href="@{/auth/logout}"
+           class="flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all font-medium">
+            <span class="material-symbols-outlined">logout</span>
+            <span>Đăng xuất</span>
+        </a>
+    </div>
+</aside>
+</body>
+</html>

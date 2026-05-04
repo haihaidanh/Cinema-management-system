@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Admin - Quản lý Phòng chiếu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style> body { font-family: 'Inter', sans-serif; } .font-headline { font-family: 'Manrope', sans-serif; } </style>
+</head>
+<body class="bg-slate-50">
+
+<div th:replace="~{fragments/admin_sidebar :: sidebar}"></div>
+
+<main class="ml-64 p-8">
+    <div class="mb-8 flex justify-between items-center">
+        <h1 class="text-3xl font-black font-headline text-[#111d23]">QUẢN LÝ PHÒNG CHIẾU</h1>
+        <button onclick="openCreateModal()" class="bg-[#004692] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#111d23] transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">add</span>
+            Thêm phòng
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Card Phòng chiếu -->
+        <div th:each="room : ${rooms}" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-[#004692] transition-all group">
+            <div class="flex justify-between items-start mb-4">
+                <div class="bg-blue-50 text-[#004692] p-3 rounded-xl group-hover:bg-[#004692] group-hover:text-white transition-all">
+                    <span class="material-symbols-outlined">meeting_room</span>
+                </div>
+                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase">Sẵn sàng</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800" th:text="'Phòng Chiếu ' + ${room.roomId}"></h3>
+            <p class="text-slate-500 text-sm mt-1" th:text="'Sức chứa: ' + ${room.numberOfSeats} + ' ghế'"></p>
+            <div class="mt-6 flex gap-2">
+                <button type="button"
+                        th:data-id="${room.roomId}"
+                        th:data-name="${room.roomId}"
+                        th:data-seats="${room.numberOfSeats}"
+                        th:data-desc="${room.description}"
+                        onclick="openDetailModal(this)"
+                        class="flex-1 bg-slate-800 text-white hover:bg-[#004692] py-2.5 rounded-lg text-xs font-bold transition-all">
+                    Xem sơ đồ ghế
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ROOM DETAIL MODAL -->
+<div id="roomDetailModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl w-full max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div>
+                <h2 id="detail-room-name" class="text-xl font-black font-headline text-[#111d23]">PHÒNG CHIẾU</h2>
+                <p id="detail-room-desc" class="text-slate-400 text-xs"></p>
+            </div>
+            <button onclick="closeDetailModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-all">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Body split 2 columns -->
+        <div class="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-10">
+            <!-- Left: Seat Map (70%) -->
+            <div class="lg:col-span-7 bg-slate-50 p-10 overflow-auto border-r border-slate-100">
+                <div class="mb-16 text-center">
+                    <div class="w-3/4 h-1.5 bg-slate-300 mx-auto rounded-full shadow-sm"></div>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-2 tracking-[0.5em]">Màn hình</p>
+                </div>
+                <div id="seat-container" class="flex flex-col items-center gap-3 min-w-max pb-10">
+                    <!-- Ghế render ở đây -->
+                </div>
+            </div>
+
+            <!-- Right: Edit Panel (30%) -->
+            <div class="lg:col-span-3 bg-white p-8 flex flex-col">
+                <div id="edit-placeholder" class="flex-1 flex flex-col items-center justify-center text-center opacity-40">
+                    <span class="material-symbols-outlined text-6xl mb-4">touch_app</span>
+                    <p class="text-sm font-medium">Chọn một ghế để<br>chỉnh sửa trạng thái</p>
+                </div>
+
+                <div id="edit-form" class="hidden flex-1 flex flex-col">
+                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-[#004692] rounded-full"></span>
+                        Thông tin ghế
+                    </h3>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-2xl">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Mã ghế</p>
+                                <p id="edit-seat-label" class="text-2xl font-black text-slate-800">-</p>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-2xl">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Loại</p>
+                                <p id="edit-seat-type" class="text-xs font-bold text-[#004692] uppercase">-</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Trạng thái hiện tại</label>
+                            <select id="edit-seat-status" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-[#004692] outline-none">
+                                <option value="AVAILABLE">Sẵn sàng (Available)</option>
+                                <option value="OCCUPIED">Đang có khách</option>
+                                <option value="BROKEN">Đang hỏng (Broken)</option>
+                                <option value="MAINTENANCE">Bảo trì</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="save-seat-btn" class="mt-auto w-full bg-[#111d23] text-white py-4 rounded-2xl font-bold hover:bg-[#004692] transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">save</span>
+                        Cập nhật ngay
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE ROOM MODAL -->
+<div id="createRoomModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col">
+        <!-- Header -->
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <h2 class="text-xl font-black font-headline text-[#111d23]">THÊM PHÒNG CHIẾU MỚI</h2>
+            <button onclick="closeCreateModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-all">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <!-- Form Content -->
+        <form id="create-room-form" class="p-6 space-y-5">
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Tên phòng chiếu (Số)</label>
+                <input type="text" name="roomId" required placeholder="Ví dụ: 05"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-[#004692] outline-none">
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Số lượng ghế</label>
+                <input type="number" name="numberOfSeats" required min="1" placeholder="Ví dụ: 100"
+                       class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-[#004692] outline-none">
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Mô tả phòng</label>
+                <textarea name="description" rows="3" placeholder="Ví dụ: Phòng chiếu 2D, âm thanh Dolby..."
+                          class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm font-medium focus:ring-2 focus:ring-[#004692] outline-none"></textarea>
+            </div>
+
+            <button type="submit" id="submit-room-btn"
+                    class="w-full bg-[#004692] text-white py-4 rounded-2xl font-bold hover:bg-[#111d23] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-100">
+                <span class="material-symbols-outlined text-sm">add_circle</span>
+                Xác nhận thêm
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const detailModal = document.getElementById('roomDetailModal');
+    const seatContainer = document.getElementById('seat-container');
+    let currentEditingSeatId = null;
+    let currentRoomId = null;
+
+    async function openDetailModal(btn) {
+        currentRoomId = btn.getAttribute('data-id');
+        document.getElementById('detail-room-name').innerText = "PHÒNG CHIẾU " + btn.getAttribute('data-name');
+        document.getElementById('detail-room-desc').innerText = btn.getAttribute('data-desc') || "Sơ đồ quản lý ghế";
+
+        // Reset Panel phải
+        document.getElementById('edit-placeholder').classList.remove('hidden');
+        document.getElementById('edit-form').classList.add('hidden');
+
+        detailModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        seatContainer.innerHTML = '<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#004692] mt-10"></div>';
+
+        try {
+            const response = await fetch(`/admin/rooms/${currentRoomId}/seats`);
+            const seatsData = await response.json();
+            renderSeatMap(seatsData);
+        } catch (error) {
+            seatContainer.innerHTML = '<p class="text-red-500">Lỗi tải dữ liệu.</p>';
+        }
+    }
+
+    function renderSeatMap(data) {
+        seatContainer.innerHTML = '';
+        for (const row in data) {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'flex items-center gap-3 w-full justify-center';
+            rowDiv.innerHTML = `<span class="w-8 text-[10px] font-bold text-slate-300 text-center">${row}</span>`;
+
+            const seatsDiv = document.createElement('div');
+            seatsDiv.className = 'flex gap-2';
+
+            data[row].forEach(seat => {
+                let colorClass = 'bg-slate-200';
+                if(seat.type === 'VIP') colorClass = 'bg-amber-400';
+                if(seat.type === 'SWEETBOX') colorClass = 'bg-pink-500';
+                const opacity = seat.status === 'AVAILABLE' ? 'opacity-100' : 'opacity-40';
+
+                const seatBtn = document.createElement('button');
+                seatBtn.className = `w-9 h-9 ${colorClass} ${opacity} rounded-lg flex items-center justify-center text-[10px] font-bold text-white transition-all hover:scale-110 seat-unit`;
+                seatBtn.innerText = seat.seatNumber;
+
+                seatBtn.onclick = () => {
+                    // Xóa active cũ
+                    document.querySelectorAll('.seat-unit').forEach(b => b.classList.remove('ring-4', 'ring-[#004692]', 'ring-offset-2'));
+                    // Active mới
+                    seatBtn.classList.add('ring-4', 'ring-[#004692]', 'ring-offset-2');
+
+                    currentEditingSeatId = seat.seatId;
+                    document.getElementById('edit-placeholder').classList.add('hidden');
+                    document.getElementById('edit-form').classList.remove('hidden');
+                    document.getElementById('edit-seat-label').innerText = `${seat.seatRow}${seat.seatNumber}`;
+                    document.getElementById('edit-seat-type').innerText = seat.type;
+                    document.getElementById('edit-seat-status').value = seat.status;
+                };
+                seatsDiv.appendChild(seatBtn);
+            });
+            rowDiv.appendChild(seatsDiv);
+            seatContainer.appendChild(rowDiv);
+        }
+    }
+
+    document.getElementById('save-seat-btn').onclick = async function() {
+        const newStatus = document.getElementById('edit-seat-status').value;
+        const btn = this;
+        btn.disabled = true;
+        btn.innerText = 'Đang lưu...';
+
+        try {
+            const response = await fetch(`/admin/rooms/seats/${currentEditingSeatId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                // Tải lại sơ đồ để cập nhật UI
+                const res = await fetch(`/admin/rooms/${currentRoomId}/seats`);
+                const newData = await res.json();
+                renderSeatMap(newData);
+                alert("Cập nhật thành công!");
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm">save</span> Cập nhật ngay';
+        }
+    };
+
+    function closeDetailModal() {
+        detailModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    const createModal = document.getElementById('createRoomModal');
+    const createForm = document.getElementById('create-room-form');
+
+    // Mở Modal thêm phòng
+    function openCreateModal() {
+        createModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Đóng Modal thêm phòng
+    function closeCreateModal() {
+        createModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        createForm.reset(); // Xóa trắng dữ liệu cũ
+    }
+
+    // Xử lý gửi Form thêm phòng
+    createForm.onsubmit = async function(e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submit-room-btn');
+        const formData = new FormData(createForm);
+        const data = Object.fromEntries(formData.entries());
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Đang xử lý...';
+
+        try {
+            const response = await fetch('/admin/rooms/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert("Thêm phòng chiếu mới thành công!");
+                window.location.reload(); // Load lại trang để thấy card mới
+            } else {
+                const errorText = await response.text();
+                alert("Lỗi: " + errorText);
+            }
+        } catch (error) {
+            console.error("Lỗi khi thêm phòng:", error);
+            alert("Không thể kết nối đến máy chủ.");
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span class="material-symbols-outlined text-sm">add_circle</span> Xác nhận thêm';
+        }
+    };
+</script>
+</body>
+</html>

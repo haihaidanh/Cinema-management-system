@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <title>Admin - Quản lý Phim</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style> body { font-family: 'Inter', sans-serif; } .font-headline { font-family: 'Manrope', sans-serif; } </style>
+</head>
+<body class="bg-slate-50">
+
+<!-- Chèn Sidebar -->
+<div th:replace="~{fragments/admin_sidebar :: sidebar}"></div>
+
+<!-- Cấu trúc tương tự trên, chỉ thay phần nội dung chính -->
+<main class="ml-64 p-8 text-sm">
+    <div class="mb-8 flex justify-between items-end">
+        <div>
+            <h1 class="text-3xl font-black font-headline text-[#111d23]">QUẢN LÝ SUẤT CHIẾU</h1>
+            <p class="text-slate-500">Thiết lập lịch chiếu phim cho các phòng</p>
+        </div>
+        <button onclick="openModal()" class="bg-[#004692] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#00356d] transition-all flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">add</span>
+            Tạo suất chiếu
+        </button>
+    </div>
+
+    <!-- Bộ lọc nhanh -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <select class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+            <option value="">Tất cả phim</option>
+            <option th:each="movie : ${movies}"
+                    th:value="${movie.movieId}"
+                    th:text="${movie.title}"></option>
+        </select>
+        <select class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+            <option value="">Tất cả phòng</option>
+            <option th:each="room : ${rooms}"
+                    th:value="${room.roomId}"
+                    th:text="'Phòng ' + ${room.roomId}"></option>
+        </select>
+        <input type="date" class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+        <button class="bg-[#004692] text-white font-bold rounded-xl hover:bg-[#00356d] transition-all">Lọc kết quả</button>
+    </div>
+
+    <!-- Bảng danh sách suất chiếu -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+            <tr>
+                <th class="p-4 uppercase text-[11px] tracking-wider">Thông tin phim</th>
+                <th class="p-4 uppercase text-[11px] tracking-wider">Phòng chiếu</th>
+                <th class="p-4 uppercase text-[11px] tracking-wider">Ngày chiếu</th>
+                <th class="p-4 uppercase text-[11px] tracking-wider">Giờ chiếu</th>
+                <th class="p-4 uppercase text-[11px] tracking-wider text-center">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+            <!-- Sử dụng th:each để lặp qua danh sách showtimes -->
+            <tr th:each="st : ${showtimes}" class="hover:bg-slate-50/50 transition-all">
+                <!-- Hiển thị tên phim bằng cách truy cập thuộc tính .title của Movie -->
+                <td class="p-4">
+                    <div class="font-bold text-slate-800" th:text="${st.movie.title}">Tên phim</div>
+                    <div class="text-[11px] text-slate-400" th:text="${st.movie.genre}">Thể loại</div>
+                </td>
+
+                <!-- Hiển thị ID phòng bằng cách truy cập .roomId của Room -->
+                <td class="p-4">
+                        <span class="inline-flex items-center gap-1.5 bg-blue-50 text-[#004692] px-3 py-1 rounded-lg font-bold text-xs"
+                              th:text="'Phòng ' + ${st.room.roomId}">
+                        </span>
+                </td>
+
+                <!-- Định dạng ngày chiếu dd/MM/yyyy -->
+                <td class="p-4 text-slate-600 font-medium"
+                    th:text="${#temporals.format(st.showDate, 'dd/MM/yyyy')}">
+                </td>
+
+                <!-- Hiển thị giờ chiếu -->
+                <td class="p-4 text-slate-600 font-mono font-bold" th:text="${st.showTime}">
+                </td>
+
+                <!-- Các nút hành động -->
+                <td class="p-4">
+                    <div class="flex justify-center gap-2">
+                        <button type="button"
+                                th:data-id="${st.id}"
+                                th:data-movieid="${st.movie.movieId}"
+                                th:data-roomid="${st.room.roomId}"
+                                th:data-date="${st.showDate}"
+                                th:data-time="${st.showTime}"
+                                onclick="openEditModal(this)"
+                                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                            <span class="material-symbols-outlined text-xl">edit</span>
+                        </button>
+                        <button type="button"
+                                th:data-id="${st.id}"
+                                onclick="confirmDelete(this)"
+                                class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                            <span class="material-symbols-outlined text-xl">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+
+            <!-- Trạng thái khi không có dữ liệu -->
+            <tr th:if="${#lists.isEmpty(showtimes)}">
+                <td colspan="5" class="p-20 text-center">
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="material-symbols-outlined text-4xl text-slate-200">calendar_today</span>
+                        <p class="text-slate-400 italic">Hiện chưa có suất chiếu nào được thiết lập.</p>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl w-full max-w-sm p-8 shadow-2xl text-center">
+        <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-4xl">delete_forever</span>
+        </div>
+        <h2 class="text-xl font-black font-headline text-[#111d23] mb-2">XÁC NHẬN XÓA</h2>
+        <p class="text-slate-500 mb-8">Bạn có chắc chắn muốn xóa suất chiếu này? Hành động này không thể hoàn tác.</p>
+
+        <div class="flex gap-3">
+            <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all">
+                Hủy bỏ
+            </button>
+            <a id="confirmDeleteBtn" href="#" class="flex-1 bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center">
+                Xác nhận xóa
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="showtimeModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 id="modalTitle" class="text-2xl font-black font-headline text-[#111d23]">TẠO SUẤT CHIẾU</h2>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form id="showtimeForm" th:action="@{/admin/showtimes/add}" method="post" class="space-y-4">
+            <input type="hidden" name="id" id="input-id">
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Phim</label>
+                <select name="movie.movieId" id="input-movie" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                    <option value="">-- Chọn phim --</option>
+                    <option th:each="movie : ${movies}" th:value="${movie.movieId}" th:text="${movie.title}"></option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Phòng chiếu</label>
+                <select name="room.roomId" id="input-room" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                    <option value="">-- Chọn phòng --</option>
+                    <option th:each="room : ${rooms}" th:value="${room.roomId}" th:text="'Phòng ' + ${room.roomId}"></option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Ngày chiếu</label>
+                    <input type="date" name="showDate" id="input-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giờ chiếu</label>
+                    <input type="time" name="showTime" id="input-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                </div>
+            </div>
+
+            <div class="pt-4 flex gap-3">
+                <button type="button" onclick="closeModal()" class="flex-1 px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all">Hủy</button>
+                <button type="submit" class="flex-1 bg-[#004692] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#00356d] transition-all">Lưu suất chiếu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('showtimeModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const showtimeForm = document.getElementById('showtimeForm');
+
+    // Hàm mở modal khi TẠO MỚI
+    function openModal() {
+        modalTitle.innerText = "TẠO SUẤT CHIẾU";
+        showtimeForm.reset(); // Xóa sạch dữ liệu cũ trong form
+        document.getElementById('input-id').value = ''; // Xóa id ẩn
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Thay đổi tham số nhận vào là 'btn' thay vì 5 biến rời
+    function openEditModal(btn) {
+        modalTitle.innerText = "CẬP NHẬT SUẤT CHIẾU";
+
+        // Lấy dữ liệu từ các thuộc tính data- của nút bấm vừa nhấn
+        const id = btn.getAttribute('data-id');
+        const movieId = btn.getAttribute('data-movieid');
+        const roomId = btn.getAttribute('data-roomid');
+        const date = btn.getAttribute('data-date');
+        const time = btn.getAttribute('data-time');
+
+        // Đổ dữ liệu vào các input (phần này giữ nguyên như cũ)
+        document.getElementById('input-id').value = id;
+        document.getElementById('input-movie').value = movieId;
+        document.getElementById('input-room').value = roomId;
+        document.getElementById('input-date').value = date;
+
+        // Format lại thời gian (lấy HH:mm)
+        document.getElementById('input-time').value = time.substring(0, 5);
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    function confirmDelete(btn) {
+        const id = btn.getAttribute('data-id');
+
+        // Gán đường dẫn xóa vào nút "Xác nhận xóa" trong modal
+        confirmDeleteBtn.href = '/admin/showtimes/delete/' + id;
+
+        // Hiển thị modal
+        deleteModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDeleteModal() {
+        deleteModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Cập nhật lại window.onclick để đóng cả deleteModal khi click ra ngoài
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+        if (event.target == deleteModal) {
+            closeDeleteModal();
+        }
+    }
+</script>

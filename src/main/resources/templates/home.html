@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Home - Cinema System</title>
+    <!-- Phải có đủ Script & Font giống trang Login -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-[#f4faff] text-[#111d23]">
+
+<!-- CHÈN TOPBAR Ở ĐÂY -->
+<div th:replace="~{fragments/topbar :: topbar}"></div>
+
+<!-- NỘI DUNG TRANG (Phải có pt-20 để không bị che bởi Topbar cố định) -->
+<main class="pt-20 p-8">
+    <div class="max-w-7xl mx-auto">
+        <h2 class="text-2xl font-black font-headline text-[#004692]">NOW SHOWING</h2>
+        <p class="text-slate-500">Welcome to Cinema System. Choose your movie!</p>
+
+        <!-- Thêm nội dung của bạn ở đây -->
+    </div>
+</main>
+
+</body>
+</html>
