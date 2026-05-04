@@ -16,7 +16,9 @@ public class Room {
 
     private String roomName;
 
-    private int numberOfSeats;
+    private int totalRows;    // Số hàng của ma trận
+    private int totalColumns; // Số cột của ma trận
+
     private String description;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
@@ -24,4 +26,9 @@ public class Room {
 
     @OneToMany(mappedBy = "room")
     private List<Showtime> showtimes;
+
+    // Helper để tính tổng số ghế thực tế đã lắp
+    public int getActiveSeatsCount() {
+        return seats != null ? seats.size() : 0;
+    }
 }

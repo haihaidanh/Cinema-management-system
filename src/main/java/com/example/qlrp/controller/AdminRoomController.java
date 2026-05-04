@@ -40,11 +40,10 @@ public class AdminRoomController {
 
     @GetMapping("/{id}/seats")
     @ResponseBody
-    public Map<String, List<Seat>> getSeatsByRoom(@PathVariable int id) {
+    public List<Seat> getSeatsByRoom(@PathVariable int id) {
         Room room = roomService.getRoomById(id);
-        log.info(room.getSeats().toString());
-        return room.getSeats().stream()
-                .collect(Collectors.groupingBy(Seat::getSeatRow, TreeMap::new, Collectors.toList()));
+        // Trả về toàn bộ danh sách ghế của phòng đó, không phân nhóm
+        return room.getSeats();
     }
 
     @PutMapping("/seats/{seatId}/status")
