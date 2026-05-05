@@ -1,5 +1,6 @@
 package com.example.qlrp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -14,7 +15,7 @@ import java.util.List;
 public class Showtime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Integer showtimeId;
 
     @ManyToOne
     @JoinColumn(name = "movie_id")
@@ -26,7 +27,10 @@ public class Showtime {
 
     private LocalDate showDate;
     private LocalTime showTime;
+    private float basePrice;
+    private String status;
 
     @OneToMany(mappedBy = "showtime")
-    private List<Ticket> tickets;
+    @JsonIgnore
+    private List<SeatAvailability> seatAvailabilities;
 }

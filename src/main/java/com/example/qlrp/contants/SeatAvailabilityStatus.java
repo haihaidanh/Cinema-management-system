@@ -1,7 +1,6 @@
 package com.example.qlrp.contants;
 
-public enum SeatStatus {
+public enum SeatAvailabilityStatus {
     AVAILABLE,
-    BOOKED,
-    REPAIRING
+    BOOKED
 }

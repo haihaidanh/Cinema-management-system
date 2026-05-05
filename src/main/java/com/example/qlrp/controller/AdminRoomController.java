@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -42,23 +40,8 @@ public class AdminRoomController {
     @ResponseBody
     public List<Seat> getSeatsByRoom(@PathVariable int id) {
         Room room = roomService.getRoomById(id);
-        // Trả về toàn bộ danh sách ghế của phòng đó, không phân nhóm
+        // Trả về toàn bộ danh sách ghế của phòng đó
         return room.getSeats();
-    }
-
-    @PutMapping("/seats/{seatId}/status")
-    @ResponseBody
-    public ResponseEntity<?> updateSeatStatus(
-            @PathVariable int seatId,
-            @RequestBody Map<String, String> payload) {
-
-        try {
-            String newStatus = payload.get("status");
-            seatService.updateStatus(seatId, newStatus);
-            return ResponseEntity.ok().body(Map.of("message", "Cập nhật thành công"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
     }
 
     @GetMapping("/delete/{id}")

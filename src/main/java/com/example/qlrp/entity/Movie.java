@@ -19,7 +19,7 @@ public class Movie {
     private int releaseYear;
     private String description;
 
-    private String poster_url;
+    private String posterUrl;
     private int duration;
 
     @OneToMany(mappedBy = "movie")

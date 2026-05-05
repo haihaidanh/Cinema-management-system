@@ -13,17 +13,13 @@ public class Ticket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketId;
 
-    @ManyToOne
-    @JoinColumn(name = "seat_id")
-    private Seat seat;
-
-    @ManyToOne
-    @JoinColumn(name = "showtime_id")
-    private Showtime showtime;
-
     private float price;
 
+    @OneToOne
+    @JoinColumn(name = "seat_availability_id")
+    private SeatAvailability seatAvailability;
+
     @ManyToOne
-    @JoinColumn(name = "invoice_id")
-    private Invoice invoice;
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 }

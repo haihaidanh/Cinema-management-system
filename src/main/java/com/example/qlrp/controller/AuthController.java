@@ -1,8 +1,7 @@
 package com.example.qlrp.controller;
 
-import com.example.qlrp.contants.UserRole;
-import com.example.qlrp.entity.User;
-import com.example.qlrp.service.UserService;
+import com.example.qlrp.entity.Customer;
+import com.example.qlrp.service.CustomerService;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +18,7 @@ import org.springframework.ui.Model;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private CustomerService customerService;
 
     @GetMapping("/login")
     public String showLoginPage() {
@@ -27,23 +26,17 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username,
+    public String login(@RequestParam String email,
                         @RequestParam String password,
                         HttpSession session,
                         Model model) {
 
-        User user = userService.authenticate(username, password);
+        Customer customer = customerService.authenticate(email, password);
 
-        log.info("user:{}", user);
-        if (user != null) {
-            session.setAttribute("currentUser", user);
-
-            // Phân quyền hướng trang sau khi đăng nhập
-            if (user.getRole() == UserRole.MANAGER) {
-                return "redirect:/admin/movies";
-            } else {
-                return "redirect:/";
-            }
+        log.info("customer:{}", customer);
+        if (customer != null) {
+            session.setAttribute("currentCustomer", customer);
+            return "redirect:/";
         }
 
         // Nếu sai thông tin, quay lại login với thông báo lỗi
