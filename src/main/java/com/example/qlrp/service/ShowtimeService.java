@@ -6,14 +6,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalTime; // Giữ lại để dùng cho logic checkDuplicate
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ShowtimeService {
     @Autowired
     private ShowtimeRepository showtimeRepository;
 
+    // Lấy tất cả suất chiếu (Dùng cho danh sách Admin)
+    public List<Showtime> getAllShowtimes() {
+        return showtimeRepository.findAll();
+    }
+
+    // Tìm suất chiếu theo ID
+    public Optional<Showtime> findById(int id) {
+        return showtimeRepository.findById(id);
+    }
+
+    // Lấy danh sách ngày chiếu hợp lệ của bộ phim (từ hôm nay trở đi)
+    public List<LocalDate> findAvailableDatesByMovie(int movieId) {
+        LocalDate today = LocalDate.now();
+        return showtimeRepository.findAvailableDatesByMovie(movieId, today);
+    }
+
+    // Tìm suất chiếu theo phim và ngày cụ thể
+    public List<Showtime> findShowtimesByMovieAndDate(int movieId, LocalDate date) {
+        return showtimeRepository.findShowtimesByMovieAndDate(movieId, date);
+    }
 
     public void saveShowtime(Showtime showtime) {
         showtimeRepository.save(showtime);
@@ -23,17 +44,18 @@ public class ShowtimeService {
         showtimeRepository.deleteById(id);
     }
 
+    /**
+     * Kiểm tra trùng lịch chiếu trong một phòng
+     * Thuật toán Overlap: (Bắt đầu mới < Kết thúc cũ) AND (Kết thúc mới > Bắt đầu cũ)
+     */
     public boolean checkDuplicate(Integer roomId, LocalDate date, LocalTime time, Integer excludeId) {
-        // Lấy tất cả suất chiếu của phòng đó trong ngày đó
         List<Showtime> existingShows = showtimeRepository.findByRoom_RoomIdAndShowDate(roomId, date);
 
-        // Giả định mỗi suất chiếu kéo dài 150 phút (2h30p)
-        int durationInMinutes = 150;
+        int durationInMinutes = 150; // Giả định phim dài 2h30p bao gồm cả dọn phòng
         LocalTime newStart = time;
         LocalTime newEnd = newStart.plusMinutes(durationInMinutes);
 
         for (Showtime ex : existingShows) {
-            // Nếu là thao tác UPDATE, bỏ qua việc so sánh với chính nó
             if (excludeId != null && ex.getShowtimeId().equals(excludeId)) {
                 continue;
             }
@@ -41,15 +63,14 @@ public class ShowtimeService {
             LocalTime exStart = ex.getShowTime();
             LocalTime exEnd = exStart.plusMinutes(durationInMinutes);
 
-            // Thuật toán kiểm tra giao thoa (Overlap):
-            // Một suất chiếu bị trùng nếu: (Bắt đầu mới < Kết thúc cũ) VÀ (Kết thúc mới > Bắt đầu cũ)
             if (newStart.isBefore(exEnd) && newEnd.isAfter(exStart)) {
-                return true; // Bị trùng lịch
+                return true;
             }
         }
-        return false; // Không trùng
+        return false;
     }
-    // Ví dụ logic lọc đơn giản trong Service
+
+    // Logic lọc nâng cao cho Admin
     public List<Showtime> filterShowtimes(Long movieId, Long roomId, LocalDate date) {
         if (movieId == null && roomId == null && date == null) {
             return showtimeRepository.findAll();

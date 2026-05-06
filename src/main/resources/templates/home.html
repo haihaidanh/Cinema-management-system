@@ -19,13 +19,41 @@
 <!-- CHÈN TOPBAR Ở ĐÂY -->
 <div th:replace="~{fragments/topbar :: topbar}"></div>
 
-<!-- NỘI DUNG TRANG (Phải có pt-20 để không bị che bởi Topbar cố định) -->
+<!-- NỘI DUNG TRANG -->
 <main class="pt-20 p-8">
     <div class="max-w-7xl mx-auto">
-        <h2 class="text-2xl font-black font-headline text-[#004692]">NOW SHOWING</h2>
-        <p class="text-slate-500">Welcome to Cinema System. Choose your movie!</p>
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black font-headline text-[#004692]">PHIM ĐANG CHIẾU</h2>
+            
+            <!-- Search Form -->
+            <form action="/" method="GET" class="flex gap-2">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="Tìm kiếm phim..." 
+                       class="border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[#004692]">
+                <button type="submit" class="bg-[#004692] text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-800 transition">Tìm kiếm</button>
+            </form>
+        </div>
 
-        <!-- Thêm nội dung của bạn ở đây -->
+        <div th:if="${movies != null and !movies.isEmpty()}" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Movie Card -->
+            <div th:each="movie : ${movies}" class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition">
+                <img th:src="${movie.posterUrl != null ? movie.posterUrl : 'https://via.placeholder.com/300x450?text=No+Poster'}" 
+                     alt="Movie Poster" class="w-full h-[350px] object-cover">
+                <div class="p-4">
+                    <h3 class="font-bold text-lg truncate mb-1" th:text="${movie.title}">Movie Title</h3>
+                    <p class="text-sm text-slate-500 mb-2">
+                        <span th:text="${movie.genre}">Genre</span> | <span th:text="${movie.duration + ' phút'}">Duration</span>
+                    </p>
+                    <a th:href="@{/movies/{id}(id=${movie.movieId})}" 
+                       class="block w-full text-center bg-[#004692] text-white py-2 rounded-lg font-medium hover:bg-blue-800 transition">
+                        Đặt vé
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${movies == null or movies.isEmpty()}" class="text-center py-12">
+            <p class="text-slate-500 text-lg">Không tìm thấy bộ phim nào phù hợp với yêu cầu của bạn.</p>
+        </div>
     </div>
 </main>
 

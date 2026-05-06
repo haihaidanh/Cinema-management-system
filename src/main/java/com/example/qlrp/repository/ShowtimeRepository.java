@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
+    List<Showtime> findByShowDateOrderByShowTimeAsc(LocalDate showDate);
+
     List<Showtime> findByRoom_RoomIdAndShowDate(Integer roomId, LocalDate showDate);
 
     @Query("SELECT s FROM Showtime s WHERE " +
@@ -20,4 +22,10 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Integer> {
             @Param("movieId") Long movieId,
             @Param("roomId") Long roomId,
             @Param("showDate") LocalDate showDate);
+
+    @Query("SELECT DISTINCT s.showDate FROM Showtime s WHERE s.movie.movieId = :movieId AND s.showDate >= :today ORDER BY s.showDate ASC")
+    List<LocalDate> findAvailableDatesByMovie(@Param("movieId") Integer movieId, @Param("today") LocalDate today);
+
+    @Query("SELECT s FROM Showtime s WHERE s.movie.movieId = :movieId AND s.showDate = :date ORDER BY s.showTime ASC")
+    List<Showtime> findShowtimesByMovieAndDate(@Param("movieId") Integer movieId, @Param("date") LocalDate date);
 }

@@ -4,15 +4,28 @@ import com.example.qlrp.entity.Movie;
 import com.example.qlrp.repository.MovieRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MovieService {
     @Autowired
     private MovieRepository movieRepository;
 
+    // Lấy tất cả phim
     public List<Movie> getAllMovies() {
         return movieRepository.findAll();
+    }
+
+    // Tìm kiếm phim theo tên (UC: Tìm kiếm phim - Extend của Xem danh sách phim)
+    public List<Movie> searchByTitle(String keyword) {
+        return movieRepository.findByTitleContainingIgnoreCase(keyword);
+    }
+
+    // Tìm phim theo ID
+    public Optional<Movie> findById(int id) {
+        return movieRepository.findById(id);
     }
 
     public void saveMovie(Movie movie) {
@@ -21,9 +34,5 @@ public class MovieService {
 
     public void deleteMovie(int id) {
         movieRepository.deleteById(id);
-    }
-
-    public Movie getMovieById(int id) {
-        return movieRepository.findById(id).orElse(null);
     }
 }

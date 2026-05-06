@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Lịch Sử Đặt Vé - Cinema System</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-[#f4faff] text-[#111d23]">
+
+<div th:replace="~{fragments/topbar :: topbar}"></div>
+
+<main class="pt-24 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-black font-headline text-[#004692] mb-8">LỊCH SỬ ĐẶT VÉ</h1>
+        
+        <div th:if="${bookings != null and !bookings.isEmpty()}">
+            <div class="space-y-6">
+                <!-- Loop through bookings -->
+                <div th:each="booking : ${bookings}" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row gap-6 hover:shadow-md transition">
+                    <!-- Assuming all tickets in a booking have the same movie, we take the first ticket's movie info -->
+                    <div th:if="${booking.tickets != null and !booking.tickets.isEmpty()}" class="flex gap-6 w-full">
+                        <img th:src="${booking.tickets[0].seatAvailability.showtime.movie.posterUrl != null ? booking.tickets[0].seatAvailability.showtime.movie.posterUrl : 'https://via.placeholder.com/100x150?text=No+Poster'}" 
+                             class="w-20 h-32 object-cover rounded-lg shadow-sm shrink-0">
+                        
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold font-headline text-[#004692]" th:text="${booking.tickets[0].seatAvailability.showtime.movie.title}">Movie Title</h3>
+                                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">Đã thanh toán</span>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-y-2 text-sm text-slate-600 mb-4">
+                                    <p><span class="font-semibold">Mã vé:</span> <span th:text="${'#BK' + booking.bookingId}">#BK123</span></p>
+                                    <p><span class="font-semibold">Ngày đặt:</span> <span th:text="${#temporals.format(booking.bookingTime, 'dd/MM/yyyy HH:mm')}">Date</span></p>
+                                    <p><span class="font-semibold">Suất chiếu:</span> <span th:text="${#temporals.format(booking.tickets[0].seatAvailability.showtime.showTime, 'HH:mm')} + ' - ' + ${#temporals.format(booking.tickets[0].seatAvailability.showtime.showDate, 'dd/MM/yyyy')}">Time</span></p>
+                                    <p><span class="font-semibold">Phòng chiếu:</span> <span th:text="${booking.tickets[0].seatAvailability.showtime.room.roomName}">Room 1</span></p>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t pt-3 mt-2">
+                                <div class="flex justify-between items-center cursor-pointer text-[#004692] hover:text-blue-800" th:attr="onclick='toggleTickets(' + ${booking.bookingId} + ')'">
+                                    <span class="font-bold text-sm flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">confirmation_number</span> 
+                                        Xem chi tiết vé (<span th:text="${#lists.size(booking.tickets)}"></span> vé)
+                                    </span>
+                                    <span class="material-symbols-outlined" th:id="'icon-' + ${booking.bookingId}">expand_more</span>
+                                </div>
+                                
+                                <div th:id="'tickets-' + ${booking.bookingId}" class="hidden mt-4 bg-slate-50 rounded-xl border border-slate-200 p-4">
+                                    <div class="space-y-3">
+                                        <div th:each="ticket : ${booking.tickets}" class="flex justify-between items-center border-b border-slate-200 pb-2 last:border-0 last:pb-0">
+                                            <div class="flex flex-col">
+                                                <span class="font-mono font-bold text-[#004692]" th:text="${ticket.ticketCode}">TK-00000</span>
+                                                <span class="text-xs text-slate-500">
+                                                    Ghế: <span class="font-bold text-slate-700" th:text="${ticket.seatAvailability.seat.seatRow + ticket.seatAvailability.seat.seatNumber}">A1</span>
+                                                    - 
+                                                    <span th:text="${ticket.seatAvailability.seat.seatType != null ? ticket.seatAvailability.seat.seatType.typeName : 'Thường'}">Thường</span>
+                                                </span>
+                                            </div>
+                                            <span class="font-bold text-slate-700" th:text="${#numbers.formatDecimal(ticket.price, 0, 'COMMA', 0, 'POINT')} + 'đ'">100,000đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between items-center border-t pt-3 mt-3">
+                                <span class="text-slate-500 font-bold text-sm">TỔNG TIỀN</span>
+                                <span class="text-lg font-black text-[#004692]" th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fallback if booking has no tickets -->
+                    <div th:if="${booking.tickets == null or booking.tickets.isEmpty()}" class="w-full text-center py-4 text-slate-500">
+                        Hóa đơn lỗi (Không có vé)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${bookings == null or bookings.isEmpty()}" class="bg-white p-12 rounded-2xl text-center border border-slate-100 shadow-sm">
+            <span class="material-symbols-outlined text-5xl text-slate-300 mb-4 block">receipt_long</span>
+            <h3 class="text-xl font-bold text-slate-700 mb-2">Bạn chưa có vé nào</h3>
+            <p class="text-slate-500 mb-6">Hãy đặt vé để trải nghiệm các bộ phim tuyệt vời!</p>
+            <a href="/" class="inline-block bg-[#004692] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition">Khám Phá Phim Ngay</a>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleTickets(bookingId) {
+        const el = document.getElementById('tickets-' + bookingId);
+        const icon = document.getElementById('icon-' + bookingId);
+        if (el.classList.contains('hidden')) {
+            el.classList.remove('hidden');
+            icon.innerText = 'expand_less';
+        } else {
+            el.classList.add('hidden');
+            icon.innerText = 'expand_more';
+        }
+    }
+</script>
+</body>
+</html>

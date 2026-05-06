@@ -15,6 +15,7 @@ import java.util.List;
 public class Showtime {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "showtime_id")
     private Integer showtimeId;
 
     @ManyToOne
