@@ -29,6 +29,15 @@ public class MovieService {
     }
 
     public void saveMovie(Movie movie) {
+        if (movie.getTitle() == null || movie.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên phim không được để trống");
+        }
+        if (movie.getDuration() <= 0) {
+            throw new IllegalArgumentException("Thời lượng phim phải lớn hơn 0");
+        }
+        if (movie.getReleaseYear() < 1895) { // Năm ra đời điện ảnh
+            throw new IllegalArgumentException("Năm sản xuất không hợp lệ");
+        }
         movieRepository.save(movie);
     }
 
