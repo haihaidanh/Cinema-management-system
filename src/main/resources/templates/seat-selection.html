@@ -43,6 +43,10 @@
     <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8">
         <!-- Seat Map -->
         <div class="w-full lg:w-2/3 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+            <a th:href="@{/movies/{id}/showtimes(id=${showtime.movie.movieId})}" class="inline-flex items-center gap-2 text-slate-500 hover:text-[#004692] mb-6 font-bold transition">
+                <span class="material-symbols-outlined text-sm">arrow_back_ios</span> Quay lại chọn ngày chiếu
+            </a>
+            
             <div class="text-center mb-8">
                 <h2 class="text-xl font-bold font-headline mb-2" th:text="${showtime.room.roomName}">Room</h2>
                 <div class="screen mb-8 relative">

@@ -23,6 +23,10 @@
 
 <main class="pt-24 p-8">
     <div class="max-w-4xl mx-auto">
+        <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="inline-flex items-center gap-2 text-slate-500 hover:text-[#004692] mb-4 font-bold transition">
+            <span class="material-symbols-outlined text-sm">arrow_back_ios</span> Quay lại chi tiết phim
+        </a>
+        
         <!-- Movie Header -->
         <div class="flex items-center gap-6 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             <img th:src="${movie.posterUrl != null ? movie.posterUrl : 'https://via.placeholder.com/100x150?text=No+Poster'}" 
@@ -32,7 +36,6 @@
                 <p class="text-slate-500 mb-2">
                     <span th:text="${movie.genre}">Genre</span> | <span th:text="${movie.duration + ' phút'}">120 phút</span>
                 </p>
-                <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="text-blue-600 hover:underline text-sm font-medium">&larr; Quay lại chi tiết phim</a>
             </div>
         </div>
 
