@@ -4,7 +4,10 @@ import com.example.qlrp.entity.Seat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, Integer> {
-    // JpaRepository đã có sẵn các hàm findById và save
+    List<Seat> findByRoom_RoomId(Integer roomId);
+    void deleteByRoom_RoomId(Integer roomId);
 }

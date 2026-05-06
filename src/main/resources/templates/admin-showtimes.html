@@ -28,20 +28,34 @@
 
     <!-- Bộ lọc nhanh -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <select class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+        <!-- Cột 1: Select Phim -->
+        <select id="filter-movie" name="movieId" class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
             <option value="">Tất cả phim</option>
             <option th:each="movie : ${movies}"
+                    th:selected="${selectedMovieId == movie.movieId}"
                     th:value="${movie.movieId}"
                     th:text="${movie.title}"></option>
         </select>
-        <select class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+
+        <!-- Cột 2: Select Phòng -->
+        <select id="filter-room" name="roomId" class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
             <option value="">Tất cả phòng</option>
             <option th:each="room : ${rooms}"
+                    th:selected="${selectedRoomId == room.roomId}"
                     th:value="${room.roomId}"
-                    th:text="'Phòng ' + ${room.roomId}"></option>
+                    th:text="${room.roomName}"></option>
         </select>
-        <input type="date" class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
-        <button class="bg-[#004692] text-white font-bold rounded-xl hover:bg-[#00356d] transition-all">Lọc kết quả</button>
+
+        <!-- Cột 3: Input Date -->
+        <input type="date" id="filter-date" th:value="${selectedDate}" class="bg-white border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+
+        <!-- Cột 4: Nút bấm -->
+        <div class="flex gap-2">
+            <button onclick="applyFilters()" class="flex-1 bg-[#004692] text-white font-bold rounded-xl hover:bg-[#00356d] transition-all">Lọc</button>
+            <button onclick="resetFilters()" class="px-4 bg-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-300 transition-all">
+                <span class="material-symbols-outlined mt-1">restart_alt</span>
+            </button>
+        </div>
     </div>
 
     <!-- Bảng danh sách suất chiếu -->
@@ -49,7 +63,7 @@
         <table class="w-full text-left border-collapse">
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
             <tr>
-                <th class="p-4 uppercase text-[11px] tracking-wider">Thông tin phim</th>
+                <th class="p-4 uppercase text-[11px] tracking-wider w-[35%]">Thông tin phim</th>
                 <th class="p-4 uppercase text-[11px] tracking-wider">Phòng chiếu</th>
                 <th class="p-4 uppercase text-[11px] tracking-wider">Ngày chiếu</th>
                 <th class="p-4 uppercase text-[11px] tracking-wider">Giờ chiếu</th>
@@ -61,14 +75,31 @@
             <tr th:each="st : ${showtimes}" class="hover:bg-slate-50/50 transition-all">
                 <!-- Hiển thị tên phim bằng cách truy cập thuộc tính .title của Movie -->
                 <td class="p-4">
-                    <div class="font-bold text-slate-800" th:text="${st.movie.title}">Tên phim</div>
-                    <div class="text-[11px] text-slate-400" th:text="${st.movie.genre}">Thể loại</div>
+                    <div class="flex items-center gap-4">
+                        <!-- Ảnh Poster Phim -->
+                        <div class="w-12 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0 shadow-sm border border-slate-200">
+                            <img th:if="${st.movie.posterUrl}"
+                                 th:src="${st.movie.posterUrl}"
+                                 alt="Poster"
+                                 class="w-full h-full object-cover">
+                            <div th:unless="${st.movie.posterUrl}"
+                                 class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+                                <span class="material-symbols-outlined text-xl">image</span>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin văn bản -->
+                        <div>
+                            <div class="font-bold text-slate-800" th:text="${st.movie.title}">Tên phim</div>
+                            <div class="text-[11px] text-slate-400" th:text="${st.movie.genre}">Thể loại</div>
+                        </div>
+                    </div>
                 </td>
 
                 <!-- Hiển thị ID phòng bằng cách truy cập .roomId của Room -->
                 <td class="p-4">
                         <span class="inline-flex items-center gap-1.5 bg-blue-50 text-[#004692] px-3 py-1 rounded-lg font-bold text-xs"
-                              th:text="'Phòng ' + ${st.room.roomId}">
+                              th:text="${st.room.roomName}">
                         </span>
                 </td>
 
@@ -85,7 +116,7 @@
                 <td class="p-4">
                     <div class="flex justify-center gap-2">
                         <button type="button"
-                                th:data-id="${st.id}"
+                                th:data-id="${st.showtimeId}"
                                 th:data-movieid="${st.movie.movieId}"
                                 th:data-roomid="${st.room.roomId}"
                                 th:data-date="${st.showDate}"
@@ -95,7 +126,7 @@
                             <span class="material-symbols-outlined text-xl">edit</span>
                         </button>
                         <button type="button"
-                                th:data-id="${st.id}"
+                                th:data-id="${st.showtimeId}"
                                 onclick="confirmDelete(this)"
                                 class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                             <span class="material-symbols-outlined text-xl">delete</span>
@@ -109,7 +140,7 @@
                 <td colspan="5" class="p-20 text-center">
                     <div class="flex flex-col items-center gap-2">
                         <span class="material-symbols-outlined text-4xl text-slate-200">calendar_today</span>
-                        <p class="text-slate-400 italic">Hiện chưa có suất chiếu nào được thiết lập.</p>
+                        <p class="text-slate-400 italic">Không có suất chiếu nào.</p>
                     </div>
                 </td>
             </tr>
@@ -148,7 +179,12 @@
         </div>
 
         <form id="showtimeForm" th:action="@{/admin/showtimes/add}" method="post" class="space-y-4">
-            <input type="hidden" name="id" id="input-id">
+            <input type="hidden" name="showtimeId" id="input-id">
+
+            <div id="form-error" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-xl flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">error</span>
+                <span id="error-message">Thông báo lỗi ở đây</span>
+            </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Phim</label>
@@ -187,79 +223,134 @@
 
 <script>
     const modal = document.getElementById('showtimeModal');
-    const modalTitle = document.getElementById('modalTitle');
+    const deleteModal = document.getElementById('deleteModal');
     const showtimeForm = document.getElementById('showtimeForm');
+    const formError = document.getElementById('form-error');
+    const errorMessage = document.getElementById('error-message');
 
-    // Hàm mở modal khi TẠO MỚI
+    // --- CÁC HÀM ĐÓNG/MỞ MODAL ---
+
     function openModal() {
-        modalTitle.innerText = "TẠO SUẤT CHIẾU";
-        showtimeForm.reset(); // Xóa sạch dữ liệu cũ trong form
-        document.getElementById('input-id').value = ''; // Xóa id ẩn
+        document.getElementById('modalTitle').innerText = "TẠO SUẤT CHIẾU";
+        showtimeForm.reset();
+        document.getElementById('input-id').value = '';
+        hideError();
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
 
-    // Thay đổi tham số nhận vào là 'btn' thay vì 5 biến rời
     function openEditModal(btn) {
-        modalTitle.innerText = "CẬP NHẬT SUẤT CHIẾU";
+        document.getElementById('modalTitle').innerText = "CẬP NHẬT SUẤT CHIẾU";
+        hideError();
 
-        // Lấy dữ liệu từ các thuộc tính data- của nút bấm vừa nhấn
-        const id = btn.getAttribute('data-id');
-        const movieId = btn.getAttribute('data-movieid');
-        const roomId = btn.getAttribute('data-roomid');
-        const date = btn.getAttribute('data-date');
+        document.getElementById('input-id').value = btn.getAttribute('data-id');
+        document.getElementById('input-movie').value = btn.getAttribute('data-movieid');
+        document.getElementById('input-room').value = btn.getAttribute('data-roomid');
+        document.getElementById('input-date').value = btn.getAttribute('data-date');
+
         const time = btn.getAttribute('data-time');
-
-        // Đổ dữ liệu vào các input (phần này giữ nguyên như cũ)
-        document.getElementById('input-id').value = id;
-        document.getElementById('input-movie').value = movieId;
-        document.getElementById('input-room').value = roomId;
-        document.getElementById('input-date').value = date;
-
-        // Format lại thời gian (lấy HH:mm)
-        document.getElementById('input-time').value = time.substring(0, 5);
+        document.getElementById('input-time').value = time ? time.substring(0, 5) : '';
 
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
 
+    // Hàm Hủy/Đóng Modal chính
     function closeModal() {
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
 
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            closeModal();
-        }
-    }
-
-    const deleteModal = document.getElementById('deleteModal');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-
+    // Hàm xác nhận xóa
     function confirmDelete(btn) {
         const id = btn.getAttribute('data-id');
-
-        // Gán đường dẫn xóa vào nút "Xác nhận xóa" trong modal
-        confirmDeleteBtn.href = '/admin/showtimes/delete/' + id;
-
-        // Hiển thị modal
+        document.getElementById('confirmDeleteBtn').href = '/admin/showtimes/delete/' + id;
         deleteModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
 
+    // Hàm Hủy/Đóng Modal xóa
     function closeDeleteModal() {
         deleteModal.classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
 
-    // Cập nhật lại window.onclick để đóng cả deleteModal khi click ra ngoài
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            closeModal();
-        }
-        if (event.target == deleteModal) {
-            closeDeleteModal();
-        }
+    // --- QUẢN LÝ LỖI ---
+
+    function hideError() {
+        formError.classList.add('hidden');
     }
+
+    function showError(msg) {
+        errorMessage.innerText = msg;
+        formError.classList.remove('hidden');
+    }
+
+    // --- XỬ LÝ SUBMIT VÀ CHECK TRÙNG ---
+
+    showtimeForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        hideError();
+
+        const formData = new FormData(this);
+        const roomId = formData.get('room.roomId');
+        const showDate = formData.get('showDate');
+        const showTime = formData.get('showTime');
+        const showtimeId = document.getElementById('input-id').value; // Lấy trực tiếp từ input ẩn
+
+        try {
+            // Gọi API kiểm tra trùng
+            const url = `/admin/showtimes/check-overlap?roomId=${roomId}&date=${showDate}&time=${showTime}${showtimeId ? '&id=' + showtimeId : ''}`;
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.isOverlapping) {
+                showError("⚠️ Phòng này đã có suất chiếu trong khoảng thời gian này!");
+            } else {
+                // Nếu không trùng, dùng phương thức submit() nguyên bản của HTMLFormElement
+                this.submit();
+            }
+        } catch (err) {
+            console.error("Lỗi kiểm tra:", err);
+            this.submit(); // Nếu lỗi API thì cho qua để Backend xử lý
+        }
+    });
+
+    // --- ĐÓNG MODAL KHI CLICK RA NGOÀI ---
+    window.onclick = function(event) {
+        if (event.target === modal) closeModal();
+        if (event.target === deleteModal) closeDeleteModal();
+    }
+
+    // --- XỬ LÝ LỌC ---
+
+    function applyFilters() {
+        const movieId = document.getElementById('filter-movie').value;
+        const roomId = document.getElementById('filter-room').value;
+        const date = document.getElementById('filter-date').value;
+
+        // Tạo URL với các tham số query
+        let url = new URL(window.location.href);
+
+        if (movieId) url.searchParams.set('movieId', movieId);
+        else url.searchParams.delete('movieId');
+
+        if (roomId) url.searchParams.set('roomId', roomId);
+        else url.searchParams.delete('roomId');
+
+        if (date) url.searchParams.set('date', date);
+        else url.searchParams.delete('date');
+
+        // Chuyển hướng trang để Backend xử lý lọc
+        window.location.href = url.toString();
+    }
+
+    function resetFilters() {
+        // Chuyển hướng về trang danh sách cơ bản không có tham số lọc
+        window.location.href = '/admin/showtimes';
+    }
+
+    // (Tùy chọn) Lọc ngay khi thay đổi select mà không cần bấm nút
+    // document.getElementById('filter-movie').addEventListener('change', applyFilters);
+    // document.getElementById('filter-room').addEventListener('change', applyFilters);
 </script>
