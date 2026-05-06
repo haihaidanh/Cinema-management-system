@@ -13,7 +13,9 @@ public class Ticket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int ticketId;
 
-    private float price;
+    private String ticketCode; // Mã vé điện tử (VD: TK-00001)
+
+    private float price; // Giá vé chính thức = basePrice + surcharge
 
     @OneToOne
     @JoinColumn(name = "seat_availability_id")

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Đặt Vé Thành Công - Cinema System</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .ticket-cutout {
+            position: relative;
+        }
+        .ticket-cutout::before, .ticket-cutout::after {
+            content: ''; position: absolute; top: 50%; width: 30px; height: 30px;
+            background-color: #f4faff; border-radius: 50%; transform: translateY(-50%);
+        }
+        .ticket-cutout::before { left: -15px; }
+        .ticket-cutout::after { right: -15px; }
+        .dashed-line { border-top: 2px dashed #cbd5e1; margin: 0 20px; }
+    </style>
+</head>
+
+<body class="bg-[#f4faff] text-[#111d23]">
+
+<div th:replace="~{fragments/topbar :: topbar}"></div>
+
+<main class="pt-24 p-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-4xl">check_circle</span>
+            </div>
+            <h1 class="text-3xl font-black font-headline text-[#004692] mb-2">ĐẶT VÉ THÀNH CÔNG!</h1>
+            <p class="text-slate-500">Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8 ticket-cutout">
+            <div class="bg-[#004692] text-white p-6 text-center">
+                <p class="text-blue-200 text-sm mb-1">MÃ HÓA ĐƠN</p>
+                <h2 class="text-3xl font-black tracking-widest" th:text="${'#BK' + booking.bookingId}">#BK123</h2>
+            </div>
+            
+            <div class="p-8">
+                <!-- Assume all tickets in a booking have the same showtime -->
+                <div th:with="firstTicket=${booking.tickets[0]}">
+                    <h3 class="text-xl font-bold font-headline mb-4" th:text="${firstTicket.seatAvailability.showtime.movie.title}">Movie Title</h3>
+                    
+                    <div class="grid grid-cols-2 gap-y-4 mb-6">
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold mb-1">NGÀY CHIẾU</p>
+                            <p class="font-bold text-slate-800" th:text="${#temporals.format(firstTicket.seatAvailability.showtime.showDate, 'dd/MM/yyyy')}">Date</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold mb-1">GIỜ CHIẾU</p>
+                            <p class="font-bold text-slate-800" th:text="${#temporals.format(firstTicket.seatAvailability.showtime.showTime, 'HH:mm')}">Time</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold mb-1">PHÒNG CHIẾU</p>
+                            <p class="font-bold text-slate-800" th:text="${firstTicket.seatAvailability.showtime.room.roomName}">Room</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-bold mb-1">SỐ LƯỢNG VÉ</p>
+                            <p class="font-bold text-slate-800" th:text="${#lists.size(booking.tickets)}">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden mt-4">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                                <tr>
+                                    <th class="p-3 font-bold">Mã vé</th>
+                                    <th class="p-3 font-bold">Ghế</th>
+                                    <th class="p-3 font-bold">Loại ghế</th>
+                                    <th class="p-3 font-bold text-right">Giá vé</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="ticket : ${booking.tickets}" class="border-b border-slate-100 last:border-0">
+                                    <td class="p-3 font-mono font-bold text-[#004692]" th:text="${ticket.ticketCode}">TK-00000</td>
+                                    <td class="p-3 font-bold text-slate-800" th:text="${ticket.seatAvailability.seat.seatRow + ticket.seatAvailability.seat.seatNumber}">A1</td>
+                                    <td class="p-3">
+                                        <span th:if="${ticket.seatAvailability.seat.seatType != null and ticket.seatAvailability.seat.seatType.typeName == 'VIP'}" class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-xs font-bold">VIP</span>
+                                        <span th:if="${ticket.seatAvailability.seat.seatType != null and ticket.seatAvailability.seat.seatType.typeName == 'Couple'}" class="bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full text-xs font-bold">Couple</span>
+                                        <span th:if="${ticket.seatAvailability.seat.seatType == null or ticket.seatAvailability.seat.seatType.typeName == 'Thường'}" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-bold">Thường</span>
+                                    </td>
+                                    <td class="p-3 text-right font-medium text-slate-800" th:text="${#numbers.formatDecimal(ticket.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">100,000 VNĐ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="dashed-line my-6"></div>
+                
+                <div class="flex justify-between items-center">
+                    <p class="text-slate-500 font-bold">TỔNG THANH TOÁN</p>
+                    <p class="text-2xl font-black text-[#004692]" th:text="${#numbers.formatDecimal(booking.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex gap-4 justify-center">
+            <a href="/" class="px-8 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50 transition">Về Trang Chủ</a>
+            <a href="/bookings/history" class="px-8 py-3 bg-[#004692] text-white border-2 border-[#004692] rounded-xl font-bold hover:bg-blue-800 transition">Xem Lịch Sử Đặt Vé</a>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

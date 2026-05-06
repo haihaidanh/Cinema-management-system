@@ -17,17 +17,16 @@ public class SeatAvailability {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private SeatAvailabilityStatus status; // AVAILABLE, BOOKED
+    private SeatAvailabilityStatus status; // AVAILABLE, HOLDING, BOOKED
 
     @ManyToOne
     @JoinColumn(name = "showtime_id")
     @JsonIgnore
     private Showtime showtime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seat_id")
-    @JsonIgnore
-    private Seat seat;
+    private Seat seat;  // Không @JsonIgnore — cần serialize cho JS sơ đồ ghế
 
     @OneToOne(mappedBy = "seatAvailability")
     @JsonIgnore

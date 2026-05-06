@@ -4,7 +4,7 @@
 
             <!-- Left: Logo & Brand -->
             <div class="flex items-center gap-8">
-                <a th:href="@{/home}" class="flex items-center gap-2 group">
+                <a th:href="@{/}" class="flex items-center gap-2 group">
                     <div class="bg-[#004692] p-1.5 rounded-lg text-white shadow-lg shadow-blue-900/20">
                         <span class="material-symbols-outlined block">movie</span>
                     </div>
@@ -14,26 +14,31 @@
                 </a>
             </div>
 
+            <!-- Center: Navigation Links (khi đã đăng nhập) -->
+            <th:block th:if="${session.currentCustomer != null}">
+                <div class="hidden md:flex items-center gap-6">
+                    <a th:href="@{/}" class="text-sm font-semibold text-slate-600 hover:text-[#004692] transition-colors">Trang chủ</a>
+                    <a th:href="@{/bookings/history}" class="text-sm font-semibold text-slate-600 hover:text-[#004692] transition-colors">Lịch sử đặt vé</a>
+                </div>
+            </th:block>
+
             <!-- Right: Auth Logic -->
             <div class="flex items-center gap-3">
 
-                <!-- TRƯỜNG HỢP 1: CHƯA ĐĂNG NHẬP (currentUser == null) -->
-                <th:block th:if="${session.currentUser == null}">
+                <!-- TRƯỜNG HỢP 1: CHƯA ĐĂNG NHẬP (currentCustomer == null) -->
+                <th:block th:if="${session.currentCustomer == null}">
                     <a th:href="@{/auth/login}" class="text-sm font-bold text-slate-600 hover:text-[#004692] px-3 py-2 transition-colors">
                         Sign In
                     </a>
-                    <a href="#" class="bg-[#004692] hover:bg-[#00356d] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-blue-900/10">
-                        Register
-                    </a>
                 </th:block>
 
-                <!-- TRƯỜNG HỢP 2: ĐÃ ĐĂNG NHẬP (currentUser != null) -->
-                <th:block th:if="${session.currentUser != null}">
+                <!-- TRƯỜNG HỢP 2: ĐÃ ĐĂNG NHẬP (currentCustomer != null) -->
+                <th:block th:if="${session.currentCustomer != null}">
                     <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
                         <div class="text-right hidden sm:block">
                             <!-- Hiển thị tên từ Object User bạn lưu trong session -->
                             <p class="text-[11px] font-bold text-slate-700 leading-none"
-                               th:text="${session.currentUser.username}">Username</p>
+                               th:text="${session.currentCustomer.name}">Username</p>
                             <a th:href="@{/auth/logout}" class="text-[10px] text-red-500 hover:underline">Logout</a>
                         </div>
                         <div class="h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center">

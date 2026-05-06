@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html class="light" lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Chọn Suất Chiếu - Cinema System</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        /* Hide scrollbar for horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="bg-[#f4faff] text-[#111d23]">
+
+<!-- CHÈN TOPBAR Ở ĐÂY -->
+<div th:replace="~{fragments/topbar :: topbar}"></div>
+
+<main class="pt-24 p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Movie Header -->
+        <div class="flex items-center gap-6 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <img th:src="${movie.posterUrl != null ? movie.posterUrl : 'https://via.placeholder.com/100x150?text=No+Poster'}" 
+                 class="w-24 h-36 object-cover rounded-lg shadow-sm">
+            <div>
+                <h1 class="text-2xl font-black font-headline text-[#004692] mb-1" th:text="${movie.title}">Movie Title</h1>
+                <p class="text-slate-500 mb-2">
+                    <span th:text="${movie.genre}">Genre</span> | <span th:text="${movie.duration + ' phút'}">120 phút</span>
+                </p>
+                <a th:href="@{/movies/{id}(id=${movie.movieId})}" class="text-blue-600 hover:underline text-sm font-medium">&larr; Quay lại chi tiết phim</a>
+            </div>
+        </div>
+
+        <!-- Date Selection -->
+        <div th:if="${availableDates != null and !availableDates.isEmpty()}">
+            <h3 class="text-lg font-bold mb-4 font-headline">Chọn Ngày Chiếu</h3>
+            <div class="flex gap-4 overflow-x-auto no-scrollbar pb-4 mb-6">
+                <a th:each="date : ${availableDates}" 
+                   th:href="@{/movies/{id}/showtimes(id=${movie.movieId}, date=${date})}"
+                   th:classappend="${selectedDate == date ? 'bg-[#004692] text-white border-[#004692]' : 'bg-white text-slate-700 border-slate-200 hover:border-[#004692] hover:text-[#004692]'}"
+                   class="flex flex-col items-center justify-center min-w-[80px] h-[90px] rounded-xl border-2 transition-all cursor-pointer shadow-sm shrink-0">
+                    <span class="text-xs font-semibold uppercase mb-1" th:text="${#temporals.format(date, 'EEEE')}">Thứ</span>
+                    <span class="text-2xl font-black" th:text="${#temporals.format(date, 'dd/MM')}">01/01</span>
+                </a>
+            </div>
+
+            <!-- Showtimes List -->
+            <div th:if="${showtimes != null and !showtimes.isEmpty()}">
+                <h3 class="text-lg font-bold mb-4 font-headline">Chọn Giờ Chiếu</h3>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <!-- Group by Room might be better, but let's just list them simply -->
+                    <div class="flex flex-wrap gap-4">
+                        <a th:each="st : ${showtimes}" 
+                           th:href="@{/showtimes/{id}/seats(id=${st.showtimeId})}"
+                           class="border-2 border-slate-200 hover:border-[#004692] text-center p-3 rounded-xl transition-all cursor-pointer hover:shadow-md block w-[120px]">
+                            <div class="text-lg font-bold text-[#004692] mb-1" th:text="${#temporals.format(st.showTime, 'HH:mm')}">10:00</div>
+                            <div class="text-xs text-slate-500 font-medium truncate" th:text="${st.room.roomName}">Room 1</div>
+                            <div class="text-xs text-slate-500 truncate" th:text="${st.room.roomType}">2D</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div th:if="${showtimes == null or showtimes.isEmpty()}" class="bg-white p-8 rounded-2xl text-center border border-slate-100 shadow-sm">
+                <p class="text-slate-500">Không có suất chiếu nào trong ngày này.</p>
+            </div>
+        </div>
+
+        <div th:if="${availableDates == null or availableDates.isEmpty()}" class="bg-white p-12 rounded-2xl text-center border border-slate-100 shadow-sm">
+            <span class="material-symbols-outlined text-5xl text-slate-300 mb-4 block">event_busy</span>
+            <h3 class="text-xl font-bold text-slate-700 mb-2">Phim hiện đã hết suất chiếu</h3>
+            <p class="text-slate-500 mb-6">Vui lòng chọn bộ phim khác hoặc quay lại sau.</p>
+            <a href="/" class="inline-block bg-[#004692] text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-800 transition">Về Trang Chủ</a>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

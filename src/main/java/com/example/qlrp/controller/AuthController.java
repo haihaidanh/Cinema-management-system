@@ -46,6 +46,7 @@ public class AuthController {
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/";
+        // Redirect về login vì tất cả trang đều yêu cầu đăng nhập (Tiền điều kiện)
+        return "redirect:/auth/login";
     }
 }
