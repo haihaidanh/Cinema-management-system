@@ -71,17 +71,14 @@ public class CustomerMovieController {
         model.addAttribute("availableDates", availableDates);
 
         if (!availableDates.isEmpty()) {
-            LocalDate selectedDate;
             if (dateStr != null && !dateStr.isEmpty()) {
-                selectedDate = LocalDate.parse(dateStr);
-            } else {
-                selectedDate = availableDates.get(0); // Mặc định chọn ngày đầu tiên
-            }
-            model.addAttribute("selectedDate", selectedDate);
+                LocalDate selectedDate = LocalDate.parse(dateStr);
+                model.addAttribute("selectedDate", selectedDate);
 
-            // Lớp Showtime trả kết quả danh sách suất chiếu cho ShowtimeView
-            List<Showtime> showtimes = showtimeService.findShowtimesByMovieAndDate(id, selectedDate);
-            model.addAttribute("showtimes", showtimes);
+                // Lớp Showtime trả kết quả danh sách suất chiếu cho ShowtimeView
+                List<Showtime> showtimes = showtimeService.findShowtimesByMovieAndDate(id, selectedDate);
+                model.addAttribute("showtimes", showtimes);
+            }
         }
 
         return "showtime";

@@ -14,6 +14,18 @@
 <div th:replace="~{fragments/admin_sidebar :: sidebar}"></div>
 
 <main class="ml-64 p-8">
+    <!-- Thông báo Thành công -->
+    <div th:if="${success}" id="success-alert" class="mb-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-xl flex items-center gap-3 transition-opacity duration-500">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span th:text="${success}"></span>
+    </div>
+
+    <!-- Thông báo Lỗi chung (như lỗi Xóa) -->
+    <div th:if="${error != null and isEdit == null and (movie == null or movie.title == null)}" class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded-xl flex items-center gap-3">
+        <span class="material-symbols-outlined">error</span>
+        <span th:text="${error}"></span>
+    </div>
+
     <div class="flex justify-between items-end mb-8">
         <div>
             <h1 class="text-3xl font-black font-headline text-[#111d23]">QUẢN LÝ PHIM</h1>
@@ -92,31 +104,38 @@
             <h2 id="modalTitle" class="text-xl font-bold font-headline">THÊM PHIM MỚI</h2>
             <button onclick="closeModal()" class="material-symbols-outlined hover:text-slate-300">close</button>
         </div>
+        
+        <!-- Thông báo Lỗi trong Modal -->
+        <div th:if="${error != null and (isEdit != null or (movie != null and movie.title != null))}" class="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2">
+            <span class="material-symbols-outlined text-base">error</span>
+            <span th:text="${error}"></span>
+        </div>
+
         <form id="movieForm" method="post" th:action="@{/admin/movies}" class="p-6 space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tên phim</label>
-                    <input type="text" name="title" id="m_title" required class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" name="title" id="m_title" th:value="${movie.title}" required class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Thể loại</label>
-                    <input type="text" name="genre" id="m_genre" class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" name="genre" id="m_genre" th:value="${movie.genre}" class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Thời lượng (phút)</label>
-                    <input type="number" name="duration" id="m_duration" required class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" name="duration" id="m_duration" th:value="${movie.duration}" required class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Năm sản xuất</label>
-                    <input type="number" name="releaseYear" id="m_releaseYear" required class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="number" name="releaseYear" id="m_releaseYear" th:value="${movie.releaseYear}" required class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">URL Poster</label>
-                    <input type="text" name="posterUrl" id="m_posterUrl" class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" name="posterUrl" id="m_posterUrl" th:value="${movie.posterUrl}" class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 <div class="col-span-2">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Mô tả</label>
-                    <textarea name="description" id="m_description" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    <textarea name="description" id="m_description" th:text="${movie.description}" rows="3" class="w-full border border-slate-200 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
@@ -132,24 +151,46 @@
     const form = document.getElementById('movieForm');
     const title = document.getElementById('modalTitle');
 
-    function openModal(mode) {
+    // Tự động mở lại Modal nếu có lỗi từ Server trả về
+    /*[# th:if="${error != null}"]*/
+        const isEdit = /*[[${isEdit != null}]]*/ false;
+        if (isEdit) {
+            const movieId = /*[[${movie != null ? movie.movieId : 0}]]*/ 0;
+            openModal('edit', movieId);
+        } else {
+            openModal('add');
+        }
+    /*[/]*/
+
+    // Tự động ẩn thông báo thành công sau 3 giây
+    const successAlert = document.getElementById('success-alert');
+    if (successAlert) {
+        setTimeout(() => {
+            successAlert.style.opacity = '0';
+            setTimeout(() => successAlert.remove(), 500);
+        }, 3000);
+    }
+
+    function openModal(mode, id) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         
         if (mode === 'add') {
             title.innerText = 'THÊM PHIM MỚI';
-            form.action = '/admin/movies';
-            form.reset();
+            // Không reset form nếu đang có lỗi (để giữ data cũ)
+            const hasError = /*[[${error != null}]]*/ false;
+            if (!hasError) {
+                form.action = '/admin/movies';
+                form.reset();
+            }
+        } else {
+            title.innerText = 'CHỈNH SỬA PHIM';
+            form.action = '/admin/movies/update/' + id;
         }
     }
 
     function openEditModal(btn) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        title.innerText = 'CHỈNH SỬA PHIM';
-        
-        const id = btn.getAttribute('data-id');
-        form.action = '/admin/movies/update/' + id;
+        openModal('edit', btn.getAttribute('data-id'));
         
         document.getElementById('m_title').value = btn.getAttribute('data-title');
         document.getElementById('m_genre').value = btn.getAttribute('data-genre');
@@ -162,6 +203,8 @@
     function closeModal() {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        // Xóa thông báo lỗi khi đóng modal chủ động
+        window.location.href = '/admin/movies'; 
     }
 </script>
 </body>
