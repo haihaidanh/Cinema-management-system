@@ -31,7 +31,7 @@ public class Showtime {
     private float basePrice;
     private String status;
 
-    @OneToMany(mappedBy = "showtime")
+    @OneToMany(mappedBy = "showtime", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<SeatAvailability> seatAvailabilities;
 }

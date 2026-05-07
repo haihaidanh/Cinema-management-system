@@ -67,12 +67,22 @@
                 <th class="p-4 uppercase text-[11px] tracking-wider">Phòng chiếu</th>
                 <th class="p-4 uppercase text-[11px] tracking-wider">Ngày chiếu</th>
                 <th class="p-4 uppercase text-[11px] tracking-wider">Giờ chiếu</th>
+                <th class="p-4 uppercase text-[11px] tracking-wider">Giá vé</th>
                 <th class="p-4 uppercase text-[11px] tracking-wider text-center">Thao tác</th>
             </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
             <!-- Sử dụng th:each để lặp qua danh sách showtimes -->
-            <tr th:each="st : ${showtimes}" class="hover:bg-slate-50/50 transition-all">
+            <tr th:each="st : ${showtimes}"
+                class="hover:bg-slate-50 cursor-pointer transition-all"
+                onclick="handleRowClick(this)"
+                th:data-title="${st.movie.title}"
+                th:data-genre="${st.movie.genre}"
+                th:data-room="${st.room.roomName}"
+                th:data-date="${#temporals.format(st.showDate, 'dd/MM/yyyy')}"
+                th:data-time="${st.showTime}"
+                th:data-price="${st.basePrice}"
+                th:data-poster="${st.movie.posterUrl}">
                 <!-- Hiển thị tên phim bằng cách truy cập thuộc tính .title của Movie -->
                 <td class="p-4">
                     <div class="flex items-center gap-4">
@@ -112,8 +122,13 @@
                 <td class="p-4 text-slate-600 font-mono font-bold" th:text="${st.showTime}">
                 </td>
 
+                <!-- Thêm <td> trong th:each -->
+                <td class="p-4 font-bold text-orange-600"
+                    th:text="${#numbers.formatDecimal(st.basePrice, 0, 'COMMA', 0, 'POINT') + ' đ'}">
+                </td>
+
                 <!-- Các nút hành động -->
-                <td class="p-4">
+                <td class="p-4" onclick="event.stopPropagation()">
                     <div class="flex justify-center gap-2">
                         <button type="button"
                                 th:data-id="${st.showtimeId}"
@@ -121,6 +136,7 @@
                                 th:data-roomid="${st.room.roomId}"
                                 th:data-date="${st.showDate}"
                                 th:data-time="${st.showTime}"
+                                th:data-price="${st.basePrice}"
                                 onclick="openEditModal(this)"
                                 class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
                             <span class="material-symbols-outlined text-xl">edit</span>
@@ -133,6 +149,9 @@
                         </button>
                     </div>
                 </td>
+
+
+
             </tr>
 
             <!-- Trạng thái khi không có dữ liệu -->
@@ -210,9 +229,16 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Ngày chiếu</label>
                     <input type="date" name="showDate" id="input-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giờ chiếu</label>
-                    <input type="time" name="showTime" id="input-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                <!-- Gộp Giờ và Giá vào chung một hàng ngang -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giờ</label>
+                        <input type="time" name="showTime" id="input-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giá vé</label>
+                        <input type="number" name="basePrice" id="input-price" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
+                    </div>
                 </div>
             </div>
 
@@ -221,6 +247,44 @@
                 <button type="submit" class="flex-1 bg-[#004692] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#00356d] transition-all">Lưu suất chiếu</button>
             </div>
         </form>
+    </div>
+</div>
+
+<div id="viewModal" class="fixed inset-0 bg-black/50 z-[70] hidden flex items-center justify-center backdrop-blur-sm p-4">
+    <!-- Container Modal: Tăng max-width lên để đủ chỗ cho cả ảnh và chữ -->
+    <div class="bg-white rounded-[32px] w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row">
+
+        <!-- Bên trái: Ảnh Poster to đùng -->
+        <div class="w-full md:w-1/2 h-64 md:h-[450px] bg-slate-200">
+            <img id="view-poster" src="" alt="Movie Poster" class="w-full h-full object-cover">
+        </div>
+
+        <!-- Bên phải: Nội dung chi tiết -->
+        <div class="w-full md:w-1/2 p-8 flex flex-col justify-center">
+            <div class="mb-auto">
+                <span id="view-genre" class="inline-block px-3 py-1 bg-blue-50 text-[#004692] text-[10px] font-bold uppercase tracking-widest rounded-full mb-3"></span>
+                <h2 id="view-title" class="text-3xl font-black mb-4 text-[#111d23] leading-tight"></h2>
+
+                <div class="space-y-4 text-slate-600 border-t border-slate-100 pt-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-400">meeting_room</span>
+                        <p><strong>Phòng:</strong> <span id="view-room" class="font-semibold text-slate-800"></span></p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-400">schedule</span>
+                        <p><strong>Thời gian:</strong> <span id="view-time" class="font-semibold text-slate-800"></span> - <span id="view-date"></span></p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-400">confirmation_number</span>
+                        <p><strong>Giá vé:</strong> <span id="view-price" class="text-orange-600 font-bold text-lg"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeViewModal()" class="w-full mt-8 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-2xl font-bold transition-colors">
+                Đóng chi tiết
+            </button>
+        </div>
     </div>
 </div>
 
@@ -236,6 +300,7 @@
     function openModal() {
         document.getElementById('modalTitle').innerText = "TẠO SUẤT CHIẾU";
         showtimeForm.reset();
+        showtimeForm.action = "/admin/showtimes/add"; // Reset action về thêm mới
         document.getElementById('input-id').value = '';
         hideError();
         modal.classList.remove('hidden');
@@ -246,10 +311,15 @@
         document.getElementById('modalTitle').innerText = "CẬP NHẬT SUẤT CHIẾU";
         hideError();
 
+        // Thay đổi action của form sang đường dẫn update (nếu Backend chia riêng 2 api)
+        // Hoặc giữ nguyên nếu Backend dùng chung 1 hàm xử lý dựa trên việc có ID hay không
+        // showtimeForm.action = "/admin/showtimes/update";
+
         document.getElementById('input-id').value = btn.getAttribute('data-id');
         document.getElementById('input-movie').value = btn.getAttribute('data-movieid');
         document.getElementById('input-room').value = btn.getAttribute('data-roomid');
         document.getElementById('input-date').value = btn.getAttribute('data-date');
+        document.getElementById('input-price').value = btn.getAttribute('data-price');
 
         const time = btn.getAttribute('data-time');
         document.getElementById('input-time').value = time ? time.substring(0, 5) : '';
@@ -292,17 +362,27 @@
     // --- XỬ LÝ SUBMIT VÀ CHECK TRÙNG ---
 
     showtimeForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Chặn gửi form để kiểm tra trước
         hideError();
 
+        // 1. Lấy dữ liệu từ form
         const formData = new FormData(this);
+        const movieId = formData.get('movie.movieId');
         const roomId = formData.get('room.roomId');
         const showDate = formData.get('showDate');
         const showTime = formData.get('showTime');
-        const showtimeId = document.getElementById('input-id').value; // Lấy trực tiếp từ input ẩn
+        const basePrice = formData.get('basePrice');
+        const showtimeId = document.getElementById('input-id').value;
 
+        // 2. Validate không được để trống
+        // Nếu bất kỳ trường nào không có giá trị, hiện thông báo lỗi
+        if (!movieId || !roomId || !showDate || !showTime || !basePrice) {
+            showError("⚠️ Vui lòng nhập đầy đủ thông tin trước khi lưu!");
+            return; // Dừng lại ở đây
+        }
+
+        // 3. Nếu đã đủ dữ liệu -> Kiểm tra trùng lịch (Overlap) qua API
         try {
-            // Gọi API kiểm tra trùng
             const url = `/admin/showtimes/check-overlap?roomId=${roomId}&date=${showDate}&time=${showTime}${showtimeId ? '&id=' + showtimeId : ''}`;
             const response = await fetch(url);
             const result = await response.json();
@@ -310,12 +390,13 @@
             if (result.isOverlapping) {
                 showError("⚠️ Phòng này đã có suất chiếu trong khoảng thời gian này!");
             } else {
-                // Nếu không trùng, dùng phương thức submit() nguyên bản của HTMLFormElement
+                // Mọi thứ hợp lệ -> Gửi form thực sự lên Backend
                 this.submit();
             }
         } catch (err) {
             console.error("Lỗi kiểm tra:", err);
-            this.submit(); // Nếu lỗi API thì cho qua để Backend xử lý
+            // Nếu API check trùng bị lỗi (ví dụ mất mạng), ta vẫn cho submit để Backend xử lý
+            this.submit();
         }
     });
 
@@ -353,7 +434,45 @@
         window.location.href = '/admin/showtimes';
     }
 
-    // (Tùy chọn) Lọc ngay khi thay đổi select mà không cần bấm nút
-    // document.getElementById('filter-movie').addEventListener('change', applyFilters);
-    // document.getElementById('filter-room').addEventListener('change', applyFilters);
+    const viewModal = document.getElementById('viewModal');
+
+    function openViewModal(title, genre, room, date, time, price, poster) {
+        document.getElementById('view-title').innerText = title;
+        document.getElementById('view-genre').innerText = genre;
+        document.getElementById('view-room').innerText = room;
+        document.getElementById('view-date').innerText = date;
+        document.getElementById('view-time').innerText = time;
+        document.getElementById('view-price').innerText = new Intl.NumberFormat('vi-VN').format(price) + ' đ';
+
+        viewModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeViewModal() {
+        viewModal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Cập nhật hàm đóng khi click ra ngoài
+    window.onclick = function(event) {
+        if (event.target === modal) closeModal();
+        if (event.target === deleteModal) closeDeleteModal();
+        if (event.target === viewModal) closeViewModal();
+    }
+
+    // Thêm hàm này vào trong thẻ <script> của bạn
+    function handleRowClick(row) {
+        // Trích xuất dữ liệu từ các thuộc tính th:data-* đã đặt ở thẻ <tr>
+        const title = row.getAttribute('data-title');
+        const genre = row.getAttribute('data-genre');
+        const room = row.getAttribute('data-room');
+        const date = row.getAttribute('data-date');
+        const time = row.getAttribute('data-time');
+        const price = row.getAttribute('data-price');
+        const poster = row.getAttribute('data-poster');
+
+        // Gọi hàm hiển thị modal
+        openViewModal(title, genre, room, date, time, price, poster);
+    }
+
 </script>

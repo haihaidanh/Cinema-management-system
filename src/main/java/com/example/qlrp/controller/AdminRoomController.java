@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Map;
@@ -33,10 +34,15 @@ public class AdminRoomController {
     }
 
     @PostMapping("/add")
-    @ResponseBody
-    public String saveRoom(@RequestBody Room room) {
-        roomService.saveRoom(room);
-        return "redirect:/admin/rooms";
+    public ResponseEntity<?> addRoom(@RequestBody Room room) {
+        try {
+            roomService.saveRoom(room);
+            // Trả về HTTP 200 nếu thành công
+            return ResponseEntity.ok("Thêm phòng thành công!");
+        } catch (RuntimeException e) {
+            // Trả về HTTP 400 (Bad Request) và nội dung lỗi "Tên phòng đã tồn tại"
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/{roomId}/seats")

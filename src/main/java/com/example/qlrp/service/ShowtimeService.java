@@ -48,26 +48,32 @@ public class ShowtimeService {
         return showtimeRepository.findShowtimesByMovieAndDate(movieId, date);
     }
 
+    // Giả sử đây là hàm trong ShowtimeService
     public void saveShowtime(Showtime showtime) {
-        // 1. Lưu Showtime trước để có ID
-        Showtime savedShowtime = showtimeRepository.save(showtime);
+        if (showtime.getShowtimeId() != null) {
+            // 1. Tìm đối tượng cũ từ Database
+            Showtime existingShowtime = showtimeRepository.findById(showtime.getShowtimeId()).get();
 
-        // 2. Lấy danh sách tất cả ghế thuộc về phòng chiếu của suất chiếu này
-        // Giả sử trong entity Showtime của bạn có trường Room room;
-        List<Seat> seats = seatRepository.findByRoom_RoomId(savedShowtime.getRoom().getRoomId());
+            // 2. Cập nhật các trường cơ bản
+            existingShowtime.setMovie(showtime.getMovie());
+            existingShowtime.setRoom(showtime.getRoom());
+            existingShowtime.setShowDate(showtime.getShowDate());
+            existingShowtime.setShowTime(showtime.getShowTime());
+            existingShowtime.setBasePrice(showtime.getBasePrice());
 
-        // 3. Tạo danh sách SeatAvailability cho từng ghế
-        List<SeatAvailability> availabilities = new ArrayList<>();
-        for (Seat seat : seats) {
-            SeatAvailability availability = new SeatAvailability();
-            availability.setShowtime(savedShowtime);
-            availability.setSeat(seat);
-            availability.setStatus(SeatAvailabilityStatus.AVAILABLE); // Mặc định là trống
-            availabilities.add(availability);
+            // 3. XỬ LÝ DANH SÁCH SEATS (Quan trọng nhất)
+            // Không được dùng: existingShowtime.setSeatAvailabilities(showtime.getSeatAvailabilities());
+
+            existingShowtime.getSeatAvailabilities().clear(); // Xóa nội dung bên trong
+            if (showtime.getSeatAvailabilities() != null) {
+                existingShowtime.getSeatAvailabilities().addAll(showtime.getSeatAvailabilities()); // Thêm phần tử mới vào list cũ
+            }
+
+            showtimeRepository.save(existingShowtime);
+        } else {
+            // Nếu là thêm mới thì cứ save bình thường
+            showtimeRepository.save(showtime);
         }
-
-        // 4. Lưu tất cả trạng thái ghế vào DB
-        seatAvailabilityRepository.saveAll(availabilities);
     }
 
     public void deleteShowtime(int id) {

@@ -19,6 +19,8 @@
 
 <div th:replace="~{fragments/admin_sidebar :: sidebar}"></div>
 
+
+
 <main class="ml-64 p-8">
     <div class="mb-8 flex justify-between items-center">
         <h1 class="text-3xl font-black font-headline text-[#111d23]">QUẢN LÝ PHÒNG CHIẾU</h1>
@@ -27,6 +29,23 @@
             <span class="material-symbols-outlined text-sm">add</span>
             Thêm phòng
         </button>
+    </div>
+
+    <div th:if="${error}" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center gap-3 rounded-r-xl shadow-md animate-bounce">
+        <span class="material-symbols-outlined">error</span>
+        <div>
+            <p class="font-bold">Lỗi thao tác!</p>
+            <p class="text-sm" th:text="${error}"></p>
+        </div>
+    </div>
+
+    <!-- Thông báo thành công -->
+    <div th:if="${message}" class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 flex items-center gap-3 rounded-r-xl shadow-md">
+        <span class="material-symbols-outlined">check_circle</span>
+        <div>
+            <p class="font-bold">Thành công!</p>
+            <p class="text-sm" th:text="${message}"></p>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -318,7 +337,6 @@
         createForm.onsubmit = async function (e) {
             e.preventDefault();
 
-            // Ép kiểu dữ liệu chuẩn xác để khớp với Entity Java
             const payload = {
                 roomName: this.querySelector('[name="roomName"]').value,
                 roomType: this.querySelector('[name="roomType"]').value,
@@ -327,28 +345,35 @@
                 description: this.querySelector('[name="description"]').value
             };
 
-            console.log("Payload gửi đi:", payload);
-
             try {
                 const response = await fetch('/admin/rooms/add', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
+                const resultText = await response.text(); // Lấy thông báo từ server
+
                 if (response.ok) {
-                    alert("Thêm phòng thành công!");
+                    // Trường hợp thành công thật sự (HTTP 200)
+                    alert(resultText);
                     window.location.reload();
                 } else {
-                    const errorText = await response.text();
-                    alert("Lỗi server (" + response.status + "): " + errorText);
+                    // Trường hợp lỗi (HTTP 400 - Ví dụ: Trùng tên)
+                    // Thay vì alert, ta hiện lên khung báo lỗi màu đỏ đã tạo ở bước trước
+                    const errorAlert = document.getElementById('error-alert');
+                    const errorMsg = document.getElementById('error-message-text');
+
+                    if(errorAlert && errorMsg) {
+                        errorMsg.innerText = resultText; // "Tên phòng đã tồn tại!"
+                        errorAlert.classList.remove('hidden');
+                        closeCreateModal(); // Đóng modal để thấy thông báo lỗi phía sau
+                    } else {
+                        alert("Lỗi: " + resultText);
+                    }
                 }
             } catch (error) {
-                console.error("Lỗi:", error);
-                alert("Không thể kết nối đến server.");
+                alert("Không thể kết nối đến máy chủ.");
             }
         };
     }

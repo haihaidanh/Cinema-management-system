@@ -29,11 +29,17 @@ public class RoomService {
         return roomRepository.findAll();
     }
 
-    public Room getRoomById(int id) {
-        return roomRepository.findById(id).orElse(null);
-    }
-
+    @Transactional
     public void saveRoom(Room room) {
+
+        if (roomRepository.existsByRoomName(room.getRoomName())) {
+            throw new RuntimeException("Tên phòng '" + room.getRoomName() + "' đã tồn tại!");
+        }
+
+        if (room.getTotalRows() <= 0 || room.getTotalColumns() <= 0) {
+            throw new RuntimeException("Số hàng và số cột không được bằng 0!");
+        }
+
         Room savedRoom = roomRepository.save(room);
 
         // 1. Lấy sẵn SeatTypes
