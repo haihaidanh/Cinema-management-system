@@ -204,6 +204,38 @@
                         <button type="submit" class="w-full bg-[#004692] text-white py-4 rounded-2xl font-bold">Xác nhận thêm ghế</button>
                     </form>
                 </div>
+                <!-- FORM 3: THÔNG TIN GHẾ ĐÃ CÓ (Thêm mới đoạn này) -->
+                <div id="panel-seat-info" class="hidden">
+                    <div class="flex justify-between items-start mb-1">
+                        <h3 class="text-lg font-black font-headline text-[#111d23]">THÔNG TIN GHẾ</h3>
+                        <button onclick="deleteSeat()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all" title="Xóa ghế">
+                            <span class="material-symbols-outlined">delete_forever</span>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-8">Thông tin chi tiết vị trí ghế trong hệ thống</p>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Mã ghế</label>
+                                <div id="view-seat-id" class="p-3 text-sm font-bold text-slate-700 bg-slate-50 rounded-xl border border-slate-100">-</div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Vị trí</label>
+                                <div id="view-seat-pos" class="p-3 text-sm font-bold text-slate-700 bg-slate-50 rounded-xl border border-slate-100">-</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Loại ghế hiện tại</label>
+                            <div id="view-seat-type" class="p-4 rounded-2xl text-white font-bold text-center text-sm shadow-sm uppercase tracking-wider">
+                                -
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100 italic">
+                            Lưu ý: Để thay đổi loại ghế, hãy xóa ghế hiện tại và tạo lại.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -260,8 +292,10 @@
     const createModal = document.getElementById('createRoomModal');
     const createForm = document.getElementById('create-room-form');
 
+
     let currentRoomId = null;
     let isRoomEditing = false;
+    let currentSelectedSeatId = null;
 
     // 2. HÀM MỞ/ĐÓNG MODAL THÊM PHÒNG (Đảm bảo hoạt động)
     function openCreateModal() {
@@ -447,8 +481,12 @@
                     const type = seat.typeName ? seat.typeName.toUpperCase() : '';
                     if (type === 'VIP') colorClass = 'bg-amber-500';
                     else if (type === 'SWEETBOX') colorClass = 'bg-pink-600';
-                    cell.className = `${colorClass} rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm cursor-default`;
+
+                    cell.className = `${colorClass} rounded-lg flex items-center justify-center text-[10px] font-black text-white shadow-sm cursor-pointer hover:scale-110 transition-transform`; // Đổi sang cursor-pointer
                     cell.innerText = seatKey;
+
+                    // THÊM SỰ KIỆN CLICK VÀO GHẾ CÓ SẴN
+                    cell.onclick = () => showSeatDetail(seat);
                 } else {
                     cell.className = `border border-dashed border-slate-300 rounded-lg flex items-center justify-center text-slate-300 hover:border-[#004692] hover:text-[#004692] hover:bg-blue-50 cursor-pointer transition-all group`;
                     cell.innerHTML = `<span class="material-symbols-outlined text-sm invisible group-hover:visible">add</span>`;
@@ -511,6 +549,60 @@
             } catch (error) {
                 console.error("Error:", error);
                 alert("Đã xảy ra lỗi khi kết nối tới máy chủ.");
+            }
+        }
+    }
+
+    // Hàm hiển thị chi tiết ghế bên phải
+    function showSeatDetail(seat) {
+        currentSelectedSeatId = seat.seatId;
+
+        document.getElementById('panel-room-info').classList.add('hidden');
+        document.getElementById('panel-add-seat').classList.add('hidden');
+        document.getElementById('panel-seat-info').classList.remove('hidden');
+        document.getElementById('btn-back-to-room').classList.remove('hidden');
+
+        document.getElementById('view-seat-id').innerText = "#" + seat.seatId;
+        document.getElementById('view-seat-pos').innerText = `${seat.seatRow}${seat.seatNumber}`;
+
+        const typeEl = document.getElementById('view-seat-type');
+        const typeName = seat.typeName.toUpperCase();
+        typeEl.innerText = typeName;
+
+        // Đổi màu nền theo loại ghế
+        typeEl.classList.remove('bg-slate-500', 'bg-amber-500', 'bg-pink-600');
+        if (typeName === 'VIP') typeEl.classList.add('bg-amber-500');
+        else if (typeName === 'SWEETBOX') typeEl.classList.add('bg-pink-600');
+        else typeEl.classList.add('bg-slate-500');
+    }
+
+    // Cập nhật hàm showRoomInfo hiện có để ẩn cả panel mới
+    function showRoomInfo() {
+        document.getElementById('panel-room-info').classList.remove('hidden');
+        document.getElementById('panel-add-seat').classList.add('hidden');
+        document.getElementById('panel-seat-info').classList.add('hidden'); // Ẩn panel info
+        document.getElementById('btn-back-to-room').classList.add('hidden');
+    }
+
+    // Hàm Xóa Ghế
+    async function deleteSeat() {
+        if (!currentSelectedSeatId) return;
+
+        if (confirm(`Bạn có chắc muốn xóa ghế #${currentSelectedSeatId} không?`)) {
+            try {
+                const response = await fetch(`/admin/rooms/delete-seat/${currentSelectedSeatId}`, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    alert("Xóa ghế thành công!");
+                    // Tải lại sơ đồ bằng cách gọi lại hàm mở modal (giữ nguyên modal đang mở)
+                    const btn = document.querySelector(`button[data-id="${currentRoomId}"]`);
+                    openDetailModal(btn);
+                } else {
+                    alert("Không thể xóa ghế. Có thể ghế đã được đặt vé.");
+                }
+            } catch (error) {
+                console.error(error);
             }
         }
     }

@@ -198,7 +198,10 @@
                 <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Phòng chiếu</label>
                 <select name="room.roomId" id="input-room" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
                     <option value="">-- Chọn phòng --</option>
-                    <option th:each="room : ${rooms}" th:value="${room.roomId}" th:text="'Phòng ' + ${room.roomId}"></option>
+                    <option th:each="room : ${rooms}"
+                            th:value="${room.roomId}"
+                            th:text="${room.roomName}">
+                    </option>
                 </select>
             </div>
 

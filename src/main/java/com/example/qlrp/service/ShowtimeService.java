@@ -1,12 +1,18 @@
 package com.example.qlrp.service;
 
+import com.example.qlrp.contants.SeatAvailabilityStatus;
+import com.example.qlrp.entity.Seat;
+import com.example.qlrp.entity.SeatAvailability;
 import com.example.qlrp.entity.Showtime;
+import com.example.qlrp.repository.SeatAvailabilityRepository;
+import com.example.qlrp.repository.SeatRepository;
 import com.example.qlrp.repository.ShowtimeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime; // Giữ lại để dùng cho logic checkDuplicate
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +20,12 @@ import java.util.Optional;
 public class ShowtimeService {
     @Autowired
     private ShowtimeRepository showtimeRepository;
+
+    @Autowired
+    private SeatAvailabilityRepository seatAvailabilityRepository;
+
+    @Autowired
+    private SeatRepository seatRepository;
 
     // Lấy tất cả suất chiếu (Dùng cho danh sách Admin)
     public List<Showtime> getAllShowtimes() {
@@ -37,7 +49,25 @@ public class ShowtimeService {
     }
 
     public void saveShowtime(Showtime showtime) {
-        showtimeRepository.save(showtime);
+        // 1. Lưu Showtime trước để có ID
+        Showtime savedShowtime = showtimeRepository.save(showtime);
+
+        // 2. Lấy danh sách tất cả ghế thuộc về phòng chiếu của suất chiếu này
+        // Giả sử trong entity Showtime của bạn có trường Room room;
+        List<Seat> seats = seatRepository.findByRoom_RoomId(savedShowtime.getRoom().getRoomId());
+
+        // 3. Tạo danh sách SeatAvailability cho từng ghế
+        List<SeatAvailability> availabilities = new ArrayList<>();
+        for (Seat seat : seats) {
+            SeatAvailability availability = new SeatAvailability();
+            availability.setShowtime(savedShowtime);
+            availability.setSeat(seat);
+            availability.setStatus(SeatAvailabilityStatus.AVAILABLE); // Mặc định là trống
+            availabilities.add(availability);
+        }
+
+        // 4. Lưu tất cả trạng thái ghế vào DB
+        seatAvailabilityRepository.saveAll(availabilities);
     }
 
     public void deleteShowtime(int id) {

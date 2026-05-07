@@ -82,4 +82,16 @@ public class AdminRoomController {
                     .body("Lỗi khi cập nhật: " + e.getMessage());
         }
     }
+
+    @DeleteMapping("/delete-seat/{id}")
+    public ResponseEntity<?> deleteSeat(@PathVariable("id") Integer id) {
+        try {
+            seatService.deleteSeat(id);
+            return ResponseEntity.ok("Xóa ghế thành công");
+        } catch (Exception e) {
+            // Trả về lỗi 400 nếu có lỗi logic hoặc ràng buộc DB phức tạp hơn
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Lỗi khi xóa ghế: " + e.getMessage());
+        }
+    }
 }

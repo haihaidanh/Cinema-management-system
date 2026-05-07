@@ -5,6 +5,7 @@ import com.example.qlrp.entity.Room;
 import com.example.qlrp.entity.Seat;
 import com.example.qlrp.entity.SeatType;
 import com.example.qlrp.repository.RoomRepository;
+import com.example.qlrp.repository.SeatAvailabilityRepository;
 import com.example.qlrp.repository.SeatRepository;
 import com.example.qlrp.repository.SeatTypeRepository;
 import jakarta.transaction.Transactional;
@@ -23,14 +24,9 @@ public class SeatService {
     @Autowired
     private SeatTypeRepository seatTypeRepository;
 
-    public Seat getSeatById(int seatId) {
-        return seatRepository.findById(seatId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy ghế có ID: " + seatId));
-    }
+    @Autowired
+    private SeatAvailabilityRepository seatAvailabilityRepository;
 
-    public void saveSeat(Seat seat) {
-        seatRepository.save(seat);
-    }
 
     @Transactional
     public void addSeat(SeatDTO seatDTO) {
@@ -60,5 +56,19 @@ public class SeatService {
             System.err.println("Lưu thất bại: " + e.getMessage());
             throw e; // Ném tiếp để Controller bắt được
         }
+    }
+
+    @Transactional
+    public void deleteSeat(Integer seatId) {
+        Seat seat = seatRepository.findById(seatId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy ghế ID: " + seatId));
+
+        // 1. Xóa các bản ghi liên quan trong bảng SeatAvailability trước
+        if (seat.getSeatAvailabilities() != null && !seat.getSeatAvailabilities().isEmpty()) {
+            seatAvailabilityRepository.deleteAll(seat.getSeatAvailabilities());
+        }
+
+        // 2. Sau đó mới xóa ghế
+        seatRepository.delete(seat);
     }
 }
