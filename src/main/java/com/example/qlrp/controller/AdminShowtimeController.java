@@ -6,6 +6,7 @@ import com.example.qlrp.service.RoomService;
 import com.example.qlrp.service.ShowtimeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -81,5 +82,14 @@ public class AdminShowtimeController {
         model.addAttribute("selectedDate", date);
 
         return "admin-showtimes";
+    }
+
+    @GetMapping("/check-booked/{id}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> checkBooked(@PathVariable int id) {
+        Map<String, Object> response = new HashMap<>();
+        boolean hasBooked = showtimeService.hasBookedSeats(id);
+        response.put("hasBooked", hasBooked);
+        return ResponseEntity.ok(response);
     }
 }

@@ -71,7 +71,24 @@ public class ShowtimeService {
 
             showtimeRepository.save(existingShowtime);
         } else {
-            // Nếu là thêm mới thì cứ save bình thường
+            // 1. Lấy tất cả các ghế thuộc về phòng chiếu này
+            List<Seat> seatsInRoom = seatRepository.findByRoom_RoomId(showtime.getRoom().getRoomId());
+
+            // 2. Tạo danh sách SeatAvailability trống cho suất chiếu mới
+            List<SeatAvailability> availabilities = new ArrayList<>();
+
+            for (Seat seat : seatsInRoom) {
+                SeatAvailability sa = new SeatAvailability();
+                sa.setSeat(seat);
+                sa.setShowtime(showtime); // Liên kết với suất chiếu này
+                sa.setStatus(SeatAvailabilityStatus.AVAILABLE); // Trạng thái mặc định là còn trống
+                availabilities.add(sa);
+            }
+
+            // 3. Gán danh sách ghế vào suất chiếu
+            showtime.setSeatAvailabilities(availabilities);
+
+            // 4. Lưu Showtime (Nhờ CascadeType.ALL, các SeatAvailability sẽ được lưu theo)
             showtimeRepository.save(showtime);
         }
     }
@@ -112,5 +129,16 @@ public class ShowtimeService {
             return showtimeRepository.findAll();
         }
         return showtimeRepository.findWithFilters(movieId, roomId, date);
+    }
+
+    public boolean hasBookedSeats(int showtimeId) {
+        // Tìm suất chiếu
+        Optional<Showtime> st = showtimeRepository.findById(showtimeId);
+        if (st.isPresent()) {
+            // Kiểm tra trong danh sách seatAvailabilities của suất chiếu đó
+            return st.get().getSeatAvailabilities().stream()
+                    .anyMatch(sa -> sa.getStatus().equals(SeatAvailabilityStatus.BOOKED));
+        }
+        return false;
     }
 }

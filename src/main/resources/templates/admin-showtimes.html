@@ -229,17 +229,16 @@
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Ngày chiếu</label>
                     <input type="date" name="showDate" id="input-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
                 </div>
-                <!-- Gộp Giờ và Giá vào chung một hàng ngang -->
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giờ</label>
-                        <input type="time" name="showTime" id="input-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giá vé</label>
-                        <input type="number" name="basePrice" id="input-price" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giờ chiếu</label>
+                    <input type="time" name="showTime" id="input-time" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
                 </div>
+            </div>
+
+            <!-- Đưa Giá vé xuống hàng riêng bên dưới -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Giá vé (VNĐ)</label>
+                <input type="number" name="basePrice" id="input-price" required placeholder="Ví dụ: 80000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-[#004692]">
             </div>
 
             <div class="pt-4 flex gap-3">
@@ -335,11 +334,27 @@
     }
 
     // Hàm xác nhận xóa
-    function confirmDelete(btn) {
+    async function confirmDelete(btn) {
         const id = btn.getAttribute('data-id');
-        document.getElementById('confirmDeleteBtn').href = '/admin/showtimes/delete/' + id;
-        deleteModal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+
+        try {
+            // 1. Gọi API kiểm tra vé đã đặt chưa
+            const response = await fetch('/admin/showtimes/check-booked/' + id);
+            const data = await response.json();
+
+            if (data.hasBooked) {
+                // 2. Nếu đã có vé đặt (BOOKED), hiển thị thông báo và không mở modal xóa
+                alert("❌ Không thể xóa! Suất chiếu này đã có khách hàng đặt vé.");
+            } else {
+                // 3. Nếu chưa có vé nào được đặt, hiển thị modal xác nhận như cũ
+                document.getElementById('confirmDeleteBtn').href = '/admin/showtimes/delete/' + id;
+                deleteModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        } catch (error) {
+            console.error("Lỗi kiểm tra vé:", error);
+            alert("Có lỗi xảy ra khi kiểm tra trạng thái suất chiếu.");
+        }
     }
 
     // Hàm Hủy/Đóng Modal xóa
@@ -474,5 +489,7 @@
         // Gọi hàm hiển thị modal
         openViewModal(title, genre, room, date, time, price, poster);
     }
+
+
 
 </script>
